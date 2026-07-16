@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { useRouter } from "next/navigation";
 
 import ProblemSection from "@/components/certification/ProblemSection";
 import LeaderboardSection from "@/components/certification/LeaderboardSection";
@@ -11,7 +12,7 @@ import VerdictModal from "@/components/certification/VerdictModal";
 
 export default function CodingPage() {
   const [showVerdict, setShowVerdict] = useState(false);
-
+  const router = useRouter();
   return (
     <PageTransition>
 
@@ -58,7 +59,7 @@ export default function CodingPage() {
       {/* Temporary Floating Button (Remove after backend integration) */}
 
       <button
-        onClick={() => setShowVerdict(true)}
+        onClick={() => router.push("/engineer-certification/verdict")}
         className="fixed bottom-8 right-8 px-5 py-3 rounded-md bg-primary text-black font-bold shadow-lg hover:scale-105 transition"
       >
         Test Verdict

@@ -56,8 +56,7 @@ export default function LeaderboardSection() {
       initial={{ opacity: 0, x: 25 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.4 }}
-      className="glass-panel w-[360px] flex flex-col overflow-hidden"
-    >
+      className="glass-panel h-full w-full flex flex-col overflow-hidden"    >
       {/* Header */}
       <div className="border-b border-border bg-surface/50 p-4 flex items-center gap-3">
         <Trophy size={18} className="text-secondary-text" />
@@ -85,7 +84,7 @@ export default function LeaderboardSection() {
 
       {/* Leaderboard */}
 
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 min-h-0 overflow-y-auto p-5">
 
         <h3 className="font-mono text-sm text-secondary-text uppercase tracking-widest mb-5">
           Live Leaderboard
