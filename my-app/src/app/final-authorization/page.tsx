@@ -141,7 +141,7 @@ export default function FinalAuthorizationPage() {
 
             <div className="overflow-hidden rounded-lg border border-border">
               <Image
-                src="images/kalashnikov.png"
+                src="/images/kalashnikov.png"
                 alt="Design Team Archive"
                 width={1200}
                 height={700}
