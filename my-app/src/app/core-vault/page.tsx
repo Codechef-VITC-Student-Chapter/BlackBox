@@ -72,11 +72,10 @@ export default function CoreVaultPage() {
                 key={idx}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`${
-                  line.includes("OFFLINE")
+                className={`${line.includes("OFFLINE")
                     ? "text-danger"
                     : "text-primary"
-                }`}
+                  }`}
               >
                 {`> ${line}`}
               </motion.div>
@@ -168,7 +167,10 @@ export default function CoreVaultPage() {
             title="Core"
             status="LOCKED"
           />
-
+          <StatusCard
+            title="Final Authorization"
+            status="PENDING"
+          />
         </div>
 
       </div>
@@ -188,11 +190,10 @@ function StatusCard({
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      className={`glass-panel p-4 flex justify-between items-center border ${
-        success
+      className={`glass-panel p-4 flex justify-between items-center border ${success
           ? "border-primary/30 bg-primary/5"
           : "border-border"
-      }`}
+        }`}
     >
       <div className="flex items-center gap-3">
 
@@ -215,11 +216,10 @@ function StatusCard({
       </div>
 
       <span
-        className={`font-mono text-xs px-2 py-1 rounded ${
-          success
+        className={`font-mono text-xs px-2 py-1 rounded ${success
             ? "bg-primary/20 text-primary"
             : "bg-surface text-secondary-text"
-        }`}
+          }`}
       >
         {status}
       </span>
