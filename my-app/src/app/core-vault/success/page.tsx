@@ -28,12 +28,7 @@ export default function CoreSuccessPage() {
       "You connected every clue.",
       "",
       "The system finally trusts you.",
-      "",
-      "Initializing Engineer Certification...",
-      "Preparing Judge...",
-      "Loading Compiler...",
-      "Generating Test Cases...",
-      "Launching Assessment..."
+
     ];
 
     let i = 0;
@@ -47,7 +42,7 @@ export default function CoreSuccessPage() {
         clearInterval(interval);
 
         setTimeout(() => {
-          router.push("/engineer-certification");
+          router.push("/final-authorization");
         }, 3500);
       }
     }, 700);
