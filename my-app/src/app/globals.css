@@ -1,5 +1,16 @@
 @import "tailwindcss";
+@keyframes shake {
+  0% { transform: translate(0); }
+  20% { transform: translate(-10px, 5px); }
+  40% { transform: translate(10px, -5px); }
+  60% { transform: translate(-8px, 8px); }
+  80% { transform: translate(8px, -8px); }
+  100% { transform: translate(0); }
+}
 
+.animate-shake {
+  animation: shake 0.4s;
+}
 @theme {
   --font-inter: Inter, ui-sans-serif, system-ui, sans-serif;
   --font-space-grotesk: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;

@@ -22,7 +22,7 @@ export default function FireSequencePage() {
 
     setFired(true);
 
-    playSound("gunshot");
+    // playSound("gunshot");
 
 
     setTimeout(() => {
