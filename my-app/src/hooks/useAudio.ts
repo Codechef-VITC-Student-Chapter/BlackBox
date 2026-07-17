@@ -1,17 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 type SoundType = "ambient" | "click" | "error" | "success" | "typing" | "boot";
 
 export function useAudio() {
-  const [isMuted, setIsMuted] = useState(() => {
-    if (typeof window === "undefined") {
-      return true;
-    }
+const [isMuted, setIsMuted] = useState(true);
 
-    return localStorage.getItem("blackbox_audio_pref") !== "unmuted";
-  });
+useEffect(() => {
+  const muted =
+    localStorage.getItem("blackbox_audio_pref") !== "unmuted";
+
+  setIsMuted(muted);
+}, []);
 
   const toggleMute = () => {
     setIsMuted((prev) => {
