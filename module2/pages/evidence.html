@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BLACKBOX OS - Evidence Locker</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/terminal.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/components.css">
+</head>
+<body>
+  <div class="ambient-glow"></div>
+  <div class="ambient-glow-2"></div>
+  <div class="cyber-grid"></div>
+  <canvas id="particles-canvas"></canvas>
+
+  <div class="os-container page-fade-enter">
+    <!-- OS Header -->
+    <header class="os-header">
+      <div class="header-left">
+        <span class="text-cyan">BLACKBOX_OS // </span><span>M2_RECOVERY</span>
+      </div>
+      <div class="system-status">
+        <span class="status-indicator offline"></span>
+        <span class="text-muted">SYSTEM DEGRADED</span>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-content" style="flex-direction: column; gap: 1.5rem; justify-content: flex-start; padding-top: 4rem;">
+      <!-- Title -->
+      <div style="width: 100%; max-width: 1000px; text-align: left; margin-bottom: 0.5rem;">
+        <p class="font-mono text-cyan" style="font-size: 0.85rem; letter-spacing: 2px;">FORENSIC ARCHIVES</p>
+        <h1 class="font-sans" style="font-size: 2.2rem; font-weight: 900; letter-spacing: 0.5px;">RECOVERED EVIDENCE</h1>
+        <p class="text-muted" style="font-size: 0.9rem; margin-top: 4px;">
+          Analyze the recovered files to extract the missing repository details. Download all 4 files to unlock the reconstruction terminal.
+        </p>
+      </div>
+
+      <!-- Evidence Grid -->
+      <div class="evidence-grid" style="max-width: 1000px; width: 100%;">
+        
+        <!-- Card 1: backup.bin -->
+        <div class="evidence-card">
+          <div>
+            <div class="card-header">
+              <span>FILE_01</span>
+              <span>12 B</span>
+            </div>
+            <div class="card-title">backup.bin</div>
+            <div class="card-desc">Recovered binary archive. Contains corrupted sector snapshots.</div>
+            <div class="card-hint">"XOR operation reveals the path. Key: 0x5A"</div>
+          </div>
+          <div>
+            <!-- Simulated progress container (hidden initially) -->
+            <div class="progress-container" style="display: none; margin-bottom: 8px;">
+              <div class="progress-bar"></div>
+            </div>
+            <div class="holo-transfer" style="display: none; justify-content: space-between;">
+              <span>DOWNLOADING SECTORS</span>
+              <span class="transfer-pct">0%</span>
+            </div>
+            
+            <button class="btn-cyber dl-btn" data-file="backup" data-url="/assets/downloads/backup.bin" data-filename="backup.bin" style="width: 100%;">
+              DOWNLOAD FILE
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 2: server_room.png -->
+        <div class="evidence-card">
+          <div>
+            <div class="card-header">
+              <span>FILE_02</span>
+              <span>1.06 MB</span>
+            </div>
+            <div class="card-title">server_room.png</div>
+            <div class="card-desc">High resolution snapshot of primary node rack prior to system failure.</div>
+            <div class="card-hint">"The end of the image holds secrets. Decryption: ROT13."</div>
+          </div>
+          <div>
+            <div class="progress-container" style="display: none; margin-bottom: 8px;">
+              <div class="progress-bar"></div>
+            </div>
+            <div class="holo-transfer" style="display: none; justify-content: space-between;">
+              <span>DOWNLOADING IMAGE</span>
+              <span class="transfer-pct">0%</span>
+            </div>
+            
+            <button class="btn-cyber dl-btn" data-file="server" data-url="/assets/images/server_room.png" data-filename="server_room.png" style="width: 100%;">
+              DOWNLOAD FILE
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 3: voice.log -->
+        <div class="evidence-card">
+          <div>
+            <div class="card-header">
+              <span>FILE_03</span>
+              <span>102 B</span>
+            </div>
+            <div class="card-title">voice.log</div>
+            <div class="card-desc">Transcribed audio transmission containing automated distress frequency pulses.</div>
+            <div class="card-hint">"Telemetry burst capture. Burst duration: 300ms is Dash, 100ms is Dot."</div>
+          </div>
+          <div>
+            <div class="progress-container" style="display: none; margin-bottom: 8px;">
+              <div class="progress-bar"></div>
+            </div>
+            <div class="holo-transfer" style="display: none; justify-content: space-between;">
+              <span>DOWNLOADING TRANSCRIPT</span>
+              <span class="transfer-pct">0%</span>
+            </div>
+            
+            <button class="btn-cyber dl-btn" data-file="voice" data-url="/assets/downloads/voice.log" data-filename="voice.log" style="width: 100%;">
+              DOWNLOAD FILE
+            </button>
+          </div>
+        </div>
+
+        <!-- Card 4: recovery.log -->
+        <div class="evidence-card">
+          <div>
+            <div class="card-header">
+              <span>FILE_04</span>
+              <span>144 B</span>
+            </div>
+            <div class="card-title">recovery.log</div>
+            <div class="card-desc">Diagnostic readout log retrieved from emergency restore partition sector 4.</div>
+            <div class="card-hint">"The first letter of each system event contains the final segment."</div>
+          </div>
+          <div>
+            <div class="progress-container" style="display: none; margin-bottom: 8px;">
+              <div class="progress-bar"></div>
+            </div>
+            <div class="holo-transfer" style="display: none; justify-content: space-between;">
+              <span>DOWNLOADING LOG</span>
+              <span class="transfer-pct">0%</span>
+            </div>
+            
+            <button class="btn-cyber dl-btn" data-file="recovery" data-url="/assets/downloads/recovery.log" data-filename="recovery.log" style="width: 100%;">
+              DOWNLOAD FILE
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Button -->
+      <div style="width: 100%; max-width: 1000px; text-align: right; margin-top: 1rem;">
+        <button class="btn-cyber" id="proceed-btn" disabled style="opacity: 0.5; padding: 1rem 3rem;">
+          I HAVE ENOUGH EVIDENCE
+        </button>
+      </div>
+    </main>
+
+    <!-- OS Footer -->
+    <footer class="os-footer">
+      <div>SECURE CONNECTION // MODULE_02</div>
+      <div id="footer-time">SESSION_TIME: --:--:--</div>
+    </footer>
+  </div>
+
+  <script src="/js/downloads.js"></script>
+  <script>
+    // Live clock
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+      const footerTime = document.getElementById('footer-time');
+      if (footerTime) {
+        footerTime.innerText = `SESSION_TIME: ${timeStr}`;
+      }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>

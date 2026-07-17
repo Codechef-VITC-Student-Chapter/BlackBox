@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BLACKBOX OS - QR forensic scan</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/terminal.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <style>
+    /* Specific QR Scanning styles */
+    .qr-scanner-wrapper {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      margin: 0 auto 1.5rem auto;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.05);
+    }
+    
+    .qr-image {
+      width: 90%;
+      height: 90%;
+      object-fit: contain;
+      opacity: 0.9;
+      image-rendering: pixelated;
+    }
+    
+    .qr-scanner-line {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--color-cyan);
+      box-shadow: 
+        0 0 10px var(--color-cyan),
+        0 0 20px var(--color-cyan);
+      animation: scanSweep 4s linear infinite;
+      z-index: 2;
+    }
+
+    .corner-tag {
+      position: absolute;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: rgba(0, 240, 255, 0.5);
+    }
+    .corner-tag.tl { top: 8px; left: 8px; }
+    .corner-tag.tr { top: 8px; right: 8px; }
+    .corner-tag.bl { bottom: 8px; left: 8px; }
+    .corner-tag.br { bottom: 8px; right: 8px; }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+  <div class="ambient-glow-2"></div>
+  <div class="cyber-grid"></div>
+  <canvas id="particles-canvas"></canvas>
+
+  <div class="os-container page-fade-enter">
+    <!-- OS Header -->
+    <header class="os-header">
+      <div class="header-left">
+        <span class="text-cyan">BLACKBOX_OS // </span><span>M2_RECOVERY</span>
+      </div>
+      <div class="system-status">
+        <span class="status-indicator offline"></span>
+        <span class="text-muted">SYSTEM DEGRADED</span>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="main-content">
+      <div class="glass-panel" style="width: 100%; max-width: 900px; display: grid; grid-template-columns: 1.2fr 1.5fr; gap: 2rem; align-items: center;">
+        
+        <!-- Left: Glitching QR Image Area -->
+        <div style="text-align: center;">
+          <div class="qr-scanner-wrapper">
+            <div class="corner-tag tl">FRAG_07</div>
+            <div class="corner-tag tr">SYS_BKP</div>
+            <div class="corner-tag bl">REC_SCN</div>
+            <div class="corner-tag br">SEC_02</div>
+            <div class="qr-scanner-line"></div>
+            <img src="/assets/images/damaged_qr.png" alt="Damaged QR Clue" class="qr-image">
+          </div>
+          
+          <div class="font-sans" style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem; letter-spacing: 0.5px;">
+            EMERGENCY BACKUP SECTOR
+          </div>
+          <p class="text-muted" style="font-size: 0.85rem; max-width: 280px; margin: 0 auto; line-height: 1.4;">
+            One emergency backup fragment survived the purge. Calibrate sensor to decode.
+          </p>
+        </div>
+
+        <!-- Right: Control Center and Scanning logs -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem; height: 100%; justify-content: space-between;">
+          <div>
+            <div class="diag-title" style="margin-bottom: 1rem;">DECRYPTION PANEL</div>
+            <div class="terminal-window" style="min-height: 200px; max-height: 240px; margin-bottom: 1.5rem;">
+              <div class="terminal-header">
+                <div class="terminal-controls">
+                  <span class="terminal-dot close"></span>
+                  <span class="terminal-dot minimize"></span>
+                  <span class="terminal-dot maximize"></span>
+                </div>
+                <div>sensor_capture.log</div>
+              </div>
+              <div class="terminal-body" id="scan-terminal-body" style="font-size: 0.8rem; padding: 1rem;">
+                <p class="terminal-line system">> SENSOR STATUS: CONNECTED</p>
+                <p class="terminal-line">> Waiting for calibration sequence...</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-top: auto;">
+            <button class="btn-cyber" id="scan-btn" style="flex: 1;">
+              SCAN QR SECTOR
+            </button>
+            <button class="btn-cyber secondary" id="continue-btn" style="flex: 1; display: none; opacity: 0; transition: opacity 0.5s ease;">
+              CONTINUE TO LOCKER
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Modal Popup for Decrypted Backup Info -->
+    <div class="modal-overlay" id="info-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <span class="status-indicator"></span>
+          <span>EMERGENCY BACKUP DECRYPTED</span>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 1rem; border-bottom: 1px dashed var(--border-color); padding-bottom: 0.5rem; color: #8b9bb4;">
+            Forensic analysis of the corrupted sector successfully extracted metadata:
+          </p>
+          <table>
+            <tr>
+              <td>Platform:</td>
+              <td>GitHub</td>
+            </tr>
+            <tr>
+              <td>Owner:</td>
+              <td style="color: var(--color-danger); text-shadow: 0 0 5px rgba(255, 59, 48, 0.4);">[CORRUPTED]</td>
+            </tr>
+            <tr>
+              <td>Repository:</td>
+              <td style="color: var(--color-danger); text-shadow: 0 0 5px rgba(255, 59, 48, 0.4);">[CORRUPTED]</td>
+            </tr>
+          </table>
+          <p style="margin-top: 1.5rem; font-size: 0.8rem; color: #5d6e85; font-style: italic;">
+            Note: Owner and repository strings are missing. You must inspect the recovered evidence locker to retrieve them.
+          </p>
+        </div>
+        <button class="btn-cyber" id="close-modal-btn" style="width: 100%;">
+          CLOSE DIAGNOSTIC
+        </button>
+      </div>
+    </div>
+
+    <!-- OS Footer -->
+    <footer class="os-footer">
+      <div>SECURE CONNECTION // MODULE_02</div>
+      <div id="footer-time">SESSION_TIME: --:--:--</div>
+    </footer>
+  </div>
+
+  <script src="/js/scan.js"></script>
+  <script>
+    // Live clock
+    function updateClock() {
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+      const footerTime = document.getElementById('footer-time');
+      if (footerTime) {
+        footerTime.innerText = `SESSION_TIME: ${timeStr}`;
+      }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
