@@ -312,19 +312,22 @@ export default function RepositoryVerification() {
             </div>
             
             <div className="bg-black/60 border border-white/10 rounded-b-lg p-5 font-mono text-[11.5px] leading-relaxed overflow-y-auto no-scrollbar h-[180px] max-h-[180px]">
-              {terminalLines.map((line, idx) => (
-                <p 
-                  key={idx} 
-                  className={`mb-1.5 ${
-                    line.type === "system" ? "text-primary text-shadow-[0_0_4px_rgba(0,229,255,0.3)]" : 
-                    line.type === "error" ? "text-danger font-bold text-shadow-[0_0_4px_rgba(255,77,109,0.3)]" : 
-                    line.type === "success" ? "text-success text-shadow-[0_0_4px_rgba(34,197,94,0.3)]" :
-                    "text-white/80"
-                  }`}
-                >
-                  &gt; {line.text}
-                </p>
-              ))}
+              {terminalLines.map((line, idx) => {
+                if (!line) return null;
+                return (
+                  <p 
+                    key={idx} 
+                    className={`mb-1.5 ${
+                      line.type === "system" ? "text-primary text-shadow-[0_0_4px_rgba(0,229,255,0.3)]" : 
+                      line.type === "error" ? "text-danger font-bold text-shadow-[0_0_4px_rgba(255,77,109,0.3)]" : 
+                      line.type === "success" ? "text-success text-shadow-[0_0_4px_rgba(34,197,94,0.3)]" :
+                      "text-white/80"
+                    }`}
+                  >
+                    &gt; {line.text}
+                  </p>
+                );
+              })}
               <div ref={terminalEndRef} />
             </div>
           </div>

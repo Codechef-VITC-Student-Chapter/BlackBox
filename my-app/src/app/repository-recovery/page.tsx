@@ -142,22 +142,25 @@ export default function RepositoryRecoveryLanding() {
           </div>
           
           <div className="flex-1 bg-black/60 border border-white/10 rounded-b-lg p-5 font-mono text-[12px] leading-relaxed overflow-y-auto no-scrollbar max-h-[380px] min-h-[250px]">
-            {displayedLogs.map((log, idx) => (
-              <p 
-                key={idx} 
-                className={`mb-2 ${
-                  log.type === "system" ? "text-primary text-shadow-[0_0_4px_rgba(0,229,255,0.3)]" : 
-                  log.type === "error" ? "text-danger font-bold text-shadow-[0_0_4px_rgba(255,77,109,0.3)]" : 
-                  log.type === "success" ? "text-success text-shadow-[0_0_4px_rgba(34,197,94,0.3)]" :
-                  "text-white"
-                }`}
-              >
-                &gt; {log.text}
-                {idx === displayedLogs.length - 1 && !isDone && (
-                  <span className="inline-block w-1.5 h-3.5 bg-primary ml-1 align-middle animate-pulse" />
-                )}
-              </p>
-            ))}
+            {displayedLogs.map((log, idx) => {
+              if (!log) return null;
+              return (
+                <p 
+                  key={idx} 
+                  className={`mb-2 ${
+                    log.type === "system" ? "text-primary text-shadow-[0_0_4px_rgba(0,229,255,0.3)]" : 
+                    log.type === "error" ? "text-danger font-bold text-shadow-[0_0_4px_rgba(255,77,109,0.3)]" : 
+                    log.type === "success" ? "text-success text-shadow-[0_0_4px_rgba(34,197,94,0.3)]" :
+                    "text-white"
+                  }`}
+                >
+                  &gt; {log.text}
+                  {idx === displayedLogs.length - 1 && !isDone && (
+                    <span className="inline-block w-1.5 h-3.5 bg-primary ml-1 align-middle animate-pulse" />
+                  )}
+                </p>
+              );
+            })}
             <div ref={terminalEndRef} />
           </div>
         </div>

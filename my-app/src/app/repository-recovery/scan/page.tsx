@@ -154,18 +154,21 @@ export default function QRForensicScan() {
               </div>
               
               <div className="bg-black/60 border border-white/10 rounded-b-lg p-5 font-mono text-[11.5px] leading-relaxed overflow-y-auto no-scrollbar h-[180px] max-h-[180px]">
-                {logs.map((log, idx) => (
-                  <p 
-                    key={idx} 
-                    className={`mb-1.5 ${
-                      log.startsWith("SENSOR STATUS:") || log.endsWith("SUCCESSFULLY.") 
-                        ? "text-primary text-shadow-[0_0_4px_rgba(0,229,255,0.3)]" 
-                        : "text-white/80"
-                    }`}
-                  >
-                    &gt; {log}
-                  </p>
-                ))}
+                {logs.map((log, idx) => {
+                  if (!log) return null;
+                  return (
+                    <p 
+                      key={idx} 
+                      className={`mb-1.5 ${
+                        log.startsWith("SENSOR STATUS:") || log.endsWith("SUCCESSFULLY.") 
+                          ? "text-primary text-shadow-[0_0_4px_rgba(0,229,255,0.3)]" 
+                          : "text-white/80"
+                      }`}
+                    >
+                      &gt; {log}
+                    </p>
+                  );
+                })}
                 <div ref={terminalEndRef} />
               </div>
             </div>
