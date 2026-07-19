@@ -116,10 +116,11 @@ export default function RepositoryReconstruction() {
         }
       }, syncIntervalTime);
       
-    } catch (err: any) {
-      addTerminalLine(`ERROR: ${err.message}`, "error");
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      addTerminalLine(`ERROR: ${error.message}`, "error");
       synth.playError();
-      setErrorMsg(err.message || "Repository Not Found. Try Again.");
+      setErrorMsg(error.message || "Repository Not Found. Try Again.");
       setLoading(false);
     }
   };

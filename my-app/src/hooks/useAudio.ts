@@ -7,12 +7,16 @@ type SoundType = "ambient" | "click" | "error" | "success" | "typing" | "boot";
 export function useAudio() {
 const [isMuted, setIsMuted] = useState(true);
 
-useEffect(() => {
-  const muted =
-    localStorage.getItem("blackbox_audio_pref") !== "unmuted";
+  useEffect(() => {
+    const muted =
+      localStorage.getItem("blackbox_audio_pref") !== "unmuted";
 
-  setIsMuted(muted);
-}, []);
+    const timer = setTimeout(() => {
+      setIsMuted(muted);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const toggleMute = () => {
     setIsMuted((prev) => {

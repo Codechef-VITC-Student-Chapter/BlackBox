@@ -13,7 +13,7 @@ export function ParticlesBackground() {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let particles: Particle[] = [];
+    const particles: Particle[] = [];
     const particleCount = 45;
 
     function resize() {

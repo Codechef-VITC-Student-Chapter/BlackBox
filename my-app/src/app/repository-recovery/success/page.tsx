@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
@@ -42,7 +42,6 @@ export default function ReconstructSuccess() {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          triggerRedirect();
           return 0;
         }
         return prev - 1;
@@ -52,9 +51,16 @@ export default function ReconstructSuccess() {
     return () => clearInterval(timer);
   }, []);
 
-  const triggerRedirect = () => {
+  const triggerRedirect = useCallback(() => {
     router.push("/repository-recovery/verify");
-  };
+  }, [router]);
+
+  // Monitor countdown to trigger redirect safely after render
+  useEffect(() => {
+    if (countdown === 0) {
+      triggerRedirect();
+    }
+  }, [countdown, triggerRedirect]);
 
   const handleContinue = () => {
     synth.playClick();

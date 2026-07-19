@@ -132,7 +132,7 @@ export default function ActivityLogsPage() {
                 className="border-t border-border bg-surface/30 px-5 py-3"
               >
                 <p className="font-mono text-[11px] text-secondary-text/70 leading-6">
-                  <span className="text-primary/60">//</span>{" "}
+                  <span className="text-primary/60">{"//"}</span>{" "}
                   Something doesn&apos;t add up.{" "}
                   <span className="text-warning/80">
                     Compare these entries with your network requests.
