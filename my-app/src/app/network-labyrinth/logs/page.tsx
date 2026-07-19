@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { Terminal, ArrowLeft } from "lucide-react";
+import { useModuleGuard } from "@/hooks/useModuleGuard";
 
 // ─── Cryptic log entries ────────────────────────────────────────────────────
 // Timestamps are hex-encoded real unix-style offsets (relative to "session start").
@@ -18,13 +19,28 @@ const RAW_LOGS = [
   { ts: "0x274C", event: "NODE_ONLINE",     node: "gateway-01",  col: "text-success/80" },
 ];
 
-// Subtle hint comment injected into page source (visible via Inspect Element / View Source)
-// <!-- [M3-LOG-HINT] Timestamps are session-relative. Cross-reference with outbound request sequence. -->
+// Real HTML comment injected into the DOM — visible via DevTools Inspector / View Source.
+// JSX comments are stripped at compile time so we use document.createComment() instead.
 
 export default function ActivityLogsPage() {
+  useModuleGuard(3);
   const router = useRouter();
   const [visibleCount, setVisibleCount] = useState(0);
   const [showHint, setShowHint] = useState(false);
+  const commentRef = useRef<Comment | null>(null);
+
+  // Inject a real HTML comment into the DOM — visible in DevTools Inspector
+  // and browser View Source, but invisible on screen.
+  useEffect(() => {
+    const comment = document.createComment(
+      " [M3-LOG-HINT] Timestamps are session-relative offsets. Cross-reference with outbound request sequence. "
+    );
+    document.body.appendChild(comment);
+    commentRef.current = comment;
+    return () => {
+      try { document.body.removeChild(comment); } catch {}
+    };
+  }, []);
 
   // Stream log entries one by one
   useEffect(() => {
@@ -42,8 +58,6 @@ export default function ActivityLogsPage() {
 
   return (
     <PageTransition>
-      {/* Hidden HTML comment with puzzle hint — visible in DevTools / View Source */}
-      {/* [M3-LOG-HINT] Timestamps are session-relative offsets. Cross-reference with outbound request sequence. */}
 
       <div className="flex flex-col items-center justify-center min-h-[80vh] w-full max-w-lg mx-auto space-y-6">
 
