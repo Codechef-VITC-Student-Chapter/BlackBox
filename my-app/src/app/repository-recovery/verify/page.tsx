@@ -143,13 +143,14 @@ export default function RepositoryVerification() {
         }
       }, 60);
       
-    } catch (err: any) {
+    } catch (err) {
       setTimeout(() => {
-        addTerminalLine(`VERIFICATION FAILURE: ${(err.message || "").toUpperCase()}`, "error");
+        const error = err instanceof Error ? err : new Error(String(err));
+        addTerminalLine(`VERIFICATION FAILURE: ${(error.message || "").toUpperCase()}`, "error");
         synth.playError();
         
         setIsShaking(true);
-        setErrorMsg(err.message || "Invalid Recovery Key");
+        setErrorMsg(error.message || "Invalid Recovery Key");
         setLoading(false);
         
         // Clear shake after animation completes
