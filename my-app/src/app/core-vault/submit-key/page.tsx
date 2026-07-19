@@ -43,11 +43,32 @@ export default function CoreRecoveryPage() {
     return () => clearInterval(interval);
   }, [playSound]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!masterKey.trim()) return;
+    
     playSound("typing");
+    
+    try {
+      const response = await fetch("/api/core-vault", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ masterKey })
+      });
 
-    // Backend validation later
-    router.push("/core-vault/success");
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setTerminalLines((prev) => [...prev, "Master Key Accepted.", "Initializing Core..."]);
+        setTimeout(() => {
+          router.push("/core-vault/success");
+        }, 1500);
+      } else {
+        setTerminalLines((prev) => [...prev, `ERROR: ${data.message || "Validation Failed"}`]);
+        setMasterKey("");
+      }
+    } catch (error) {
+      setTerminalLines((prev) => [...prev, "ERROR: Connection to Core failed."]);
+    }
   };
 
   return (
