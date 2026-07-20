@@ -1,245 +1,167 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
-import { Trophy, Terminal, Medal } from "lucide-react";
+import { Trophy, Terminal, Medal, Loader2 } from "lucide-react";
+import type { LeaderboardEntry } from "@/lib/scoring/ctfd";
 
 export default function FinalLeaderboardPage() {
-  const leaderboard = [
-    {
-      rank: 1,
-      team: "ByteBreakers",
-      modules: "6/6",
-      penalty: "0",
-      time: "01:21:34",
-    },
-    {
-      rank: 2,
-      team: "StackSmashers",
-      modules: "6/6",
-      penalty: "2",
-      time: "01:25:12",
-    },
-    {
-      rank: 3,
-      team: "NullPointers",
-      modules: "6/6",
-      penalty: "4",
-      time: "01:29:45",
-    },
-    {
-      rank: 4,
-      team: "Segmentation Fault",
-      modules: "6/6",
-      penalty: "5",
-      time: "01:34:18",
-    },
-  ];
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadLeaderboard() {
+      try {
+        const res = await fetch("/api/leaderboard");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.leaderboard)) {
+            setLeaderboard(data.leaderboard);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load final leaderboard:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadLeaderboard();
+  }, []);
+
+  const topTeam = leaderboard[0];
 
   return (
     <PageTransition>
-      <div className="max-w-7xl mx-auto space-y-8">
-
+      <div className="max-w-7xl mx-auto space-y-8 py-6">
         {/* Header */}
-
         <div className="glass-panel overflow-hidden">
-
           <div className="border-b border-border bg-surface/40 p-4 flex items-center gap-3">
             <Terminal size={18} className="text-secondary-text" />
-
             <span className="font-mono text-sm uppercase tracking-widest text-secondary-text">
               BLACKBOX Complete
             </span>
           </div>
 
           <div className="p-8 text-center">
-
-            <Trophy
-              size={65}
-              className="mx-auto text-primary mb-5"
-            />
-
-            <h1 className="font-heading text-4xl uppercase tracking-widest text-primary">
+            <Trophy size={65} className="mx-auto text-primary mb-5 animate-pulse" />
+            <h1 className="font-heading text-4xl uppercase tracking-widest text-primary font-bold">
               Congratulations
             </h1>
-
             <p className="font-mono text-secondary-text mt-3">
               BLACKBOX has been fully restored.
             </p>
-
           </div>
-
         </div>
 
-        {/* Team Photo */}
-
-        <div className="glass-panel p-8">
-
-          <h2 className="font-heading text-xl uppercase tracking-widest text-primary mb-6">
-            Team Photo
-          </h2>
-
-          <div className="border-[8px] border-yellow-500 rounded-xl p-3 w-fit mx-auto">
-
-            {/* Temporary Placeholder */}
-
-            <div className="w-[650px] h-[360px] rounded-lg bg-surface flex items-center justify-center">
-
-              <p className="font-mono text-secondary-text">
-                Team Photo Appears Here
-              </p>
-
+        {/* Champion Frame */}
+        {topTeam && (
+          <div className="glass-panel p-8 text-center">
+            <h2 className="font-heading text-xl uppercase tracking-widest text-primary mb-6">
+              Champion Team
+            </h2>
+            <div className="border-[6px] border-yellow-500 rounded-xl p-6 w-fit mx-auto bg-surface/50 space-y-2">
+              <p className="font-heading text-3xl text-white font-bold">{topTeam.teamName}</p>
+              <p className="font-mono text-lg text-primary">{topTeam.score} PTS</p>
             </div>
-
+            <p className="font-mono text-center text-secondary-text mt-5">
+              🥇 Champion Frame
+            </p>
           </div>
+        )}
 
-          <p className="font-mono text-center text-secondary-text mt-5">
-            🥇 Champion Frame
-          </p>
+        {/* Stats Grid */}
+        {topTeam && (
+          <div className="grid md:grid-cols-4 gap-5">
+            <StatCard title="Champion Team" value={topTeam.teamName} />
+            <StatCard title="Top Score" value={`${topTeam.score} pts`} />
+            <StatCard title="Modules Solved" value={`${topTeam.modulesCompleted}/7`} />
+            <StatCard title="Penalty Deductions" value={`-${topTeam.penalties} pts`} />
+          </div>
+        )}
 
-        </div>
-
-        {/* Team Stats */}
-
-        <div className="grid md:grid-cols-4 gap-5">
-
-          <StatCard
-            title="Team"
-            value="ByteBreakers"
-          />
-
-          <StatCard
-            title="Final Rank"
-            value="#1"
-          />
-
-          <StatCard
-            title="Recovery Time"
-            value="01:21:34"
-          />
-
-          <StatCard
-            title="Penalty"
-            value="+0 min"
-          />
-
-        </div>
-
-        {/* Leaderboard */}
-
+        {/* Leaderboard Table */}
         <div className="glass-panel overflow-hidden">
-
-          <div className="border-b border-border bg-surface/40 p-4 flex items-center gap-3">
-
-            <Medal size={18} className="text-primary" />
-
-            <span className="font-mono uppercase tracking-widest text-sm">
-              Final Leaderboard
-            </span>
-
+          <div className="border-b border-border bg-surface/40 p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Medal size={18} className="text-primary" />
+              <span className="font-mono uppercase tracking-widest text-sm text-text">
+                CTFd Dynamic Leaderboard
+              </span>
+            </div>
+            {loading && <Loader2 size={16} className="animate-spin text-primary" />}
           </div>
 
           <div className="overflow-x-auto">
-
             <table className="w-full font-mono">
-
-              <thead className="border-b border-border text-secondary-text">
-
+              <thead className="border-b border-border text-secondary-text text-xs uppercase tracking-wider bg-surface/20">
                 <tr>
-
                   <th className="p-4 text-left">Rank</th>
                   <th className="p-4 text-left">Team</th>
-                  <th className="p-4 text-left">Modules</th>
+                  <th className="p-4 text-left">Score</th>
+                  <th className="p-4 text-left">Modules Solved</th>
                   <th className="p-4 text-left">Penalty</th>
-                  <th className="p-4 text-left">Time</th>
-
+                  <th className="p-4 text-left">Last Solve Time</th>
                 </tr>
-
               </thead>
-
-              <tbody>
-
+              <tbody className="divide-y divide-border">
                 {leaderboard.map((team) => (
-
                   <tr
-                    key={team.rank}
-                    className="border-b border-border hover:bg-surface/30 transition"
+                    key={team.teamId}
+                    className="hover:bg-surface/30 transition-colors text-sm"
                   >
-
-                    <td className="p-4">{team.rank}</td>
-                    <td className="p-4">{team.team}</td>
-                    <td className="p-4">{team.modules}</td>
-                    <td className="p-4">{team.penalty}</td>
-                    <td className="p-4">{team.time}</td>
-
+                    <td className="p-4 font-bold text-primary">#{team.rank}</td>
+                    <td className="p-4 font-semibold text-text">{team.teamName}</td>
+                    <td className="p-4 text-primary font-bold">{team.score} pts</td>
+                    <td className="p-4 text-secondary-text">{team.modulesCompleted} / 7</td>
+                    <td className="p-4 text-danger/80">-{team.penalties} pts</td>
+                    <td className="p-4 text-secondary-text text-xs">
+                      {team.lastSolveAt
+                        ? new Date(team.lastSolveAt).toLocaleTimeString()
+                        : "N/A"}
+                    </td>
                   </tr>
-
                 ))}
-
+                {leaderboard.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-secondary-text text-xs">
+                      No leaderboard data available.
+                    </td>
+                  </tr>
+                )}
               </tbody>
-
             </table>
-
           </div>
-
         </div>
 
         {/* Footer */}
-
         <div className="glass-panel p-8 text-center">
-
           <h2 className="font-heading text-2xl uppercase tracking-widest text-primary mb-4">
             Thank You
           </h2>
-
           <p className="font-mono text-secondary-text leading-7">
-
             BLACKBOX was never about finding hidden clues.
-
             <br />
-
             It was about thinking like an engineer.
-
-            <br /><br />
-
-            Observe.
-
-            Investigate.
-
-            Connect.
-
-            Recover.
-
+            <br />
+            <br />
+            Observe. Investigate. Connect. Recover.
           </p>
-
-          <p className="font-mono text-primary mt-8">
-            — The Architect
-          </p>
-
+          <p className="font-mono text-primary mt-8">— The Architect</p>
         </div>
-
       </div>
     </PageTransition>
   );
 }
 
-function StatCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
+function StatCard({ title, value }: { title: string; value: string }) {
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="glass-panel p-5"
-    >
+    <motion.div whileHover={{ scale: 1.02 }} className="glass-panel p-5">
       <p className="font-mono text-xs uppercase tracking-widest text-secondary-text">
         {title}
       </p>
-
-      <p className="font-heading text-2xl text-primary mt-3">
+      <p className="font-heading text-2xl text-primary mt-3 font-bold truncate">
         {value}
       </p>
     </motion.div>
