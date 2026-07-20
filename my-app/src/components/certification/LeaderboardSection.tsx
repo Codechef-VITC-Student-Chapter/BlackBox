@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Trophy, Timer, Loader2 } from "lucide-react";
+import { Trophy, Timer, Loader2, Award } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { LeaderboardEntry } from "@/lib/scoring/ctfd";
 
@@ -19,7 +19,7 @@ export default function LeaderboardSection() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch live leaderboard and poll every 10s
+  // Fetch live global leaderboard across all modules & poll every 10s
   useEffect(() => {
     let isMounted = true;
 
@@ -62,7 +62,7 @@ export default function LeaderboardSection() {
       <div className="border-b border-border bg-surface/50 p-4 flex items-center gap-3">
         <Trophy size={18} className="text-secondary-text" />
         <span className="font-mono text-sm tracking-widest text-secondary-text uppercase">
-          Engineer Status
+          GLOBAL EVENT LEADERBOARD
         </span>
       </div>
 
@@ -80,11 +80,12 @@ export default function LeaderboardSection() {
         </div>
       </div>
 
-      {/* Leaderboard */}
+      {/* Global Leaderboard (Modules 1 - 7) */}
       <div className="flex-1 min-h-0 overflow-y-auto p-5">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-mono text-sm text-secondary-text uppercase tracking-widest">
-            Live CTFd Leaderboard
+          <h3 className="font-mono text-sm text-secondary-text uppercase tracking-widest flex items-center gap-2">
+            <Award size={14} className="text-primary" />
+            Event Standings (All Modules)
           </h3>
           {loading && <Loader2 size={14} className="animate-spin text-primary" />}
         </div>
@@ -122,7 +123,7 @@ export default function LeaderboardSection() {
                     Module {team.currentModule}
                   </span>
                   <span className="text-secondary-text">
-                    Solved: {team.modulesCompleted}/7
+                    Solved: {team.modulesCompleted} / 7
                   </span>
                 </div>
               </motion.div>
@@ -134,13 +135,13 @@ export default function LeaderboardSection() {
       {/* Footer */}
       <div className="border-t border-border bg-surface/40 p-4">
         <p className="font-mono text-xs text-secondary-text leading-6">
-          CTFd Dynamic Scoring:
+          Global CTFd Dynamic Scoring (Modules 1–7):
           <br />
-          • Module points decay with solves
+          • Each module decays with total solves
           <br />
-          • Penalty per extra attempt
+          • Scores combine all solved modules
           <br />
-          • Tie-breaker: Earlier solve time
+          • Deduction per failed attempt
         </p>
       </div>
     </motion.div>
