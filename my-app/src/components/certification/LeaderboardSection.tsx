@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import type { LeaderboardEntry } from "@/lib/scoring/ctfd";
 
 export default function LeaderboardSection() {
-  const [timeLeft, setTimeLeft] = useState(45 * 60); // 45 mins countdown
+  const [timeLeft, setTimeLeft] = useState(45 * 60); // 45 mins
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -19,7 +19,7 @@ export default function LeaderboardSection() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch live global leaderboard across all modules & poll every 10s
+  // Fetch leaderboard data
   useEffect(() => {
     let isMounted = true;
 
@@ -33,7 +33,7 @@ export default function LeaderboardSection() {
           }
         }
       } catch (err) {
-        console.error("Leaderboard fetch failed:", err);
+        console.error("Leaderboard fetch error:", err);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -52,98 +52,68 @@ export default function LeaderboardSection() {
   const seconds = timeLeft % 60;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 25 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4 }}
-      className="glass-panel h-full w-full flex flex-col overflow-hidden"
-    >
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 h-full w-full flex flex-col overflow-hidden font-sans text-zinc-50 shadow-sm backdrop-blur">
       {/* Header */}
-      <div className="border-b border-border bg-surface/50 p-4 flex items-center gap-3">
-        <Trophy size={18} className="text-secondary-text" />
-        <span className="font-mono text-sm tracking-widest text-secondary-text uppercase">
-          GLOBAL EVENT LEADERBOARD
-        </span>
+      <div className="border-b border-zinc-800 bg-zinc-950/60 p-4 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <Trophy size={16} className="text-amber-400" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+            Leaderboard
+          </span>
+        </div>
       </div>
 
-      {/* Timer */}
-      <div className="p-6 border-b border-border">
-        <div className="flex items-center gap-2 mb-3">
-          <Timer size={18} className="text-primary" />
-          <span className="font-mono text-sm text-secondary-text uppercase tracking-widest">
+      {/* Timer Card */}
+      <div className="p-5 border-b border-zinc-800 bg-zinc-900/30">
+        <div className="flex items-center gap-2 mb-1.5 text-zinc-400">
+          <Timer size={14} />
+          <span className="text-xs font-medium uppercase tracking-wider">
             Time Remaining
           </span>
         </div>
 
-        <div className="font-heading text-4xl tracking-widest text-primary">
+        <div className="text-3xl font-bold tracking-tight text-zinc-50">
           {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
         </div>
       </div>
 
-      {/* Global Leaderboard (Modules 1 - 7) */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-5">
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="font-mono text-sm text-secondary-text uppercase tracking-widest flex items-center gap-2">
-            <Award size={14} className="text-primary" />
-            Event Standings (All Modules)
-          </h3>
-          {loading && <Loader2 size={14} className="animate-spin text-primary" />}
+      {/* Standings List */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Award size={13} className="text-zinc-400" />
+            Standings
+          </span>
+          {loading && <Loader2 size={13} className="animate-spin text-zinc-400" />}
         </div>
 
         {leaderboard.length === 0 && !loading ? (
-          <div className="text-center font-mono text-xs text-secondary-text py-8">
-            No active team scores yet.
+          <div className="text-center text-xs text-zinc-500 py-8">
+            No team scores recorded yet.
           </div>
         ) : (
-          <div className="space-y-4">
-            {leaderboard.map((team) => (
-              <motion.div
-                key={team.teamId}
-                whileHover={{ scale: 1.02 }}
-                className="glass-panel p-4 border border-border"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-heading text-primary text-lg font-bold">
-                    #{team.rank}
-                  </span>
-                  <div className="flex items-center gap-3 font-mono text-xs">
-                    <span className="text-primary font-bold">{team.score} pts</span>
-                    {team.penalties > 0 && (
-                      <span className="text-danger/80">-{team.penalties} pts</span>
-                    )}
-                  </div>
-                </div>
-
-                <p className="font-mono text-text font-semibold mb-2 truncate">
+          leaderboard.map((team) => (
+            <div
+              key={team.teamId}
+              className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 flex items-center justify-between text-xs hover:bg-zinc-800/40 transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="font-bold text-amber-400 w-5">#{team.rank}</span>
+                <span className="text-zinc-200 font-medium truncate max-w-[120px]">
                   {team.teamName}
-                </p>
+                </span>
+              </div>
 
-                <div className="flex justify-between items-center text-xs font-mono">
-                  <span className="bg-primary/20 text-primary px-2.5 py-0.5 rounded">
-                    Module {team.currentModule}
-                  </span>
-                  <span className="text-secondary-text">
-                    Solved: {team.modulesCompleted} / 7
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+              <div className="text-right">
+                <p className="font-bold text-emerald-400">{team.score} pts</p>
+                <p className="text-[10px] text-zinc-500">
+                  {team.modulesCompleted} / 7 Solved
+                </p>
+              </div>
+            </div>
+          ))
         )}
       </div>
-
-      {/* Footer */}
-      <div className="border-t border-border bg-surface/40 p-4">
-        <p className="font-mono text-xs text-secondary-text leading-6">
-          Global CTFd Dynamic Scoring (Modules 1–7):
-          <br />
-          • Each module decays with total solves
-          <br />
-          • Scores combine all solved modules
-          <br />
-          • Deduction per failed attempt
-        </p>
-      </div>
-    </motion.div>
+    </div>
   );
 }
