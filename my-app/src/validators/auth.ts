@@ -1,5 +1,5 @@
 export type LoginInput = {
-  teamId: string;
+  eventId: string;
   pin: string;
 };
 
@@ -9,12 +9,12 @@ export function parseLoginInput(value: unknown): LoginInput | null {
   }
 
   const body = value as Record<string, unknown>;
-  const teamId = typeof body.teamId === "string" ? body.teamId.trim().toUpperCase() : "";
+  const eventId = typeof body.eventId === "string" ? body.eventId.trim().toUpperCase() : "";
   const pin = typeof body.pin === "string" ? body.pin.trim() : "";
 
-  if (!teamId || !pin) {
+  if (!eventId || !pin) {
     return null;
   }
 
-  return { teamId, pin };
+  return { eventId, pin };
 }

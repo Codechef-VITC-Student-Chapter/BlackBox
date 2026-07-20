@@ -16,6 +16,13 @@ const teamSchema = new Schema(
       required: true,
       trim: true,
     },
+    eventId: {
+      type: String,
+      required: true,
+      trim: true,
+      uppercase: true,
+      index: true,
+    },
     loginPin: {
       type: String,
       required: true,
