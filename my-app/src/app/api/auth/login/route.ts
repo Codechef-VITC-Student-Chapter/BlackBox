@@ -21,27 +21,36 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const input = parseLoginInput(payload);
 
   if (!input) {
-    return jsonError("Team ID and PIN are required.", 400);
+    return jsonError("Event ID and PIN are required.", 400);
   }
 
   await connectToDatabase();
 
-  const team = await Team.findOne({ teamId: input.teamId })
-    .select("+loginPin teamId teamName currentModule score")
+  const team = await Team.findOne({ eventId: input.eventId })
+    .select("+loginPin teamId teamName eventId currentModule score")
     .lean<{
       teamId: string;
       teamName: string;
+      eventId: string;
       loginPin: string;
       currentModule: number;
       score: number;
     } | null>();
 
   if (!team || team.loginPin !== input.pin) {
-    return jsonError("Invalid Team ID or PIN.", 401);
+    return jsonError("Invalid Event ID or PIN.", 401);
   }
 
+  // Generate a hidden route for the next module with team attributes
+  const hiddenRoute = `module-${team.currentModule + 1}-${team.eventId}-${team.loginPin}-${team.teamId}`;
+
   const token = await signAuthToken(
-    { teamId: team.teamId },
+    { 
+      teamId: team.teamId,
+      eventId: team.eventId,
+      pin: team.loginPin,
+      hiddenRoute: hiddenRoute,
+    },
     GAME_CONFIG.authCookieMaxAgeSeconds,
   );
   const response = NextResponse.json({

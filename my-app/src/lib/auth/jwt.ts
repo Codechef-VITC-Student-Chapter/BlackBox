@@ -1,7 +1,10 @@
 import { getServerEnv } from "@/config/env";
 import type { AuthTokenPayload } from "@/types/auth";
 
-type JwtPayload = AuthTokenPayload & {
+type JwtPayload = Omit<AuthTokenPayload, 'eventId' | 'pin' | 'hiddenRoute'> & {
+  eventId?: string;
+  pin?: string;
+  hiddenRoute?: string;
   iat: number;
   exp: number;
 };
@@ -43,6 +46,9 @@ export async function signAuthToken(payload: AuthTokenPayload, expiresInSeconds:
   const body = base64UrlEncode(
     JSON.stringify({
       teamId: payload.teamId,
+      eventId: payload.eventId,
+      pin: payload.pin,
+      hiddenRoute: payload.hiddenRoute,
       iat: now,
       exp: now + expiresInSeconds,
     } satisfies JwtPayload),
@@ -77,11 +83,16 @@ export async function verifyAuthToken(token: string): Promise<AuthTokenPayload |
     const payload = JSON.parse(new TextDecoder().decode(base64UrlDecode(body))) as JwtPayload;
     const now = Math.floor(Date.now() / 1000);
 
-    if (!payload.teamId || payload.exp <= now) {
+    if (!payload.teamId || !payload.eventId || !payload.pin || !payload.hiddenRoute || payload.exp <= now) {
       return null;
     }
 
-    return { teamId: payload.teamId };
+    return { 
+      teamId: payload.teamId,
+      eventId: payload.eventId,
+      pin: payload.pin,
+      hiddenRoute: payload.hiddenRoute,
+    };
   } catch {
     return null;
   }
