@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { connectToDatabase } from "@/lib/db/mongodb";
 import { Team } from "@/models/Team";
+import { unlockNextModule } from "@/engine/gameEngine";
 
 interface PageProps {
   params: Promise<{
@@ -84,6 +85,9 @@ export default async function HiddenAccessPage({ params }: PageProps) {
       </section>
     );
   }
+
+  // Unlock next module using game engine
+  await unlockNextModule(payload.teamId);
 
   // If all validations pass, show success message
   // This page can be replaced with actual module content
