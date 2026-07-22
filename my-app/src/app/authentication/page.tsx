@@ -47,7 +47,7 @@ export default function AuthenticationModule() {
       "3. JWT token stored in browser cookie",
       "4. Inspect DevTools → Storage → Cookies",
       "5. Decode JWT to extract hidden route",
-      "6. Navigate to hidden route URL",
+      "6. Change URL from /authentication to /access/[hiddenRoute]",
       "",
       "Example curl command:",
       'curl -X POST http://localhost:3000/api/auth/login \\',
@@ -119,25 +119,25 @@ export default function AuthenticationModule() {
           <StepCard 
             step={1} 
             title="Authenticate" 
-            description="POST /api/auth/login with Event ID and PIN"
+            description="Use your credentials to access the system"
             icon={<Key size={18} />}
           />
           <StepCard 
             step={2} 
-            title="Inspect Cookie" 
-            description="Find JWT in browser DevTools"
+            title="Investigate" 
+            description="Examine what you received after authentication"
             icon={<Shield size={18} />}
           />
           <StepCard 
             step={3} 
-            title="Decode JWT" 
-            description="Extract hidden route from payload"
+            title="Analyze" 
+            description="Look for patterns in the data"
             icon={<Terminal size={18} />}
           />
           <StepCard 
             step={4} 
-            title="Access Route" 
-            description="Navigate to hidden route URL"
+            title="Proceed" 
+            description="Use your findings to access the next area"
             icon={<ArrowRight size={18} />}
           />
           
