@@ -41,8 +41,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return jsonError("Invalid Event ID or PIN.", 401);
   }
 
-  // Generate a hidden route for the next module with team attributes
-  const hiddenRoute = `module-${team.currentModule + 1}-${team.eventId}-${team.loginPin}-${team.teamId}`;
+  // Generate a hidden route for the current module with team attributes
+  const hiddenRoute = `module-${team.currentModule}-${team.eventId}-${team.loginPin}-${team.teamId}`;
 
   const token = await signAuthToken(
     { 
