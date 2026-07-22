@@ -106,7 +106,7 @@ export default async function HiddenAccessPage({ params }: PageProps) {
         <p>Accessing Module: {accessedModule}</p>
       </div>
       <p className="font-mono text-sm text-primary">
-        Execute module protocols to advance...
+        Module access confirmed. Awaiting directives...
       </p>
     </section>
   );
