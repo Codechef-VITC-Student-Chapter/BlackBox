@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { connectToDatabase } from "@/lib/db/mongodb";
 import { Team } from "@/models/Team";
+import { Progress } from "@/models/Progress";
+import { GAME_CONFIG } from "@/config/game";
 
 interface PageProps {
   params: Promise<{
@@ -87,10 +89,38 @@ export default async function HiddenAccessPage({ params }: PageProps) {
 
   // If all validations pass, show success message
   // This page can be replaced with actual module content
-  // Module increment will happen when participants complete the actual module tasks
   
   // Extract module number from hidden route
   const accessedModule = parseInt(hiddenRoute.split('-')[1]);
+  
+  // The module they just completed is the one before the accessed module
+  const completedModule = accessedModule - 1;
+  
+  // Check if this module has already been completed
+  const existingProgress = await Progress.findOne({ 
+    teamId: payload.teamId, 
+    module: completedModule 
+  });
+  
+  // Only complete and increment if this module hasn't been completed yet
+  if (!existingProgress || !existingProgress.completed) {
+    try {
+      // Mark the completed module as done
+      await Progress.updateOne(
+        { teamId: payload.teamId, module: completedModule },
+        { $set: { completed: true, completedAt: new Date() } },
+        { upsert: true }
+      );
+      
+      // Increment to next module (the accessed module)
+      await Team.updateOne(
+        { teamId: payload.teamId },
+        { $set: { currentModule: accessedModule } }
+      );
+    } catch (error) {
+      console.error('[HiddenAccessPage] Error completing module:', error);
+    }
+  }
   
   return (
     <section className="glass-panel max-w-xl space-y-4 p-8 text-center">
