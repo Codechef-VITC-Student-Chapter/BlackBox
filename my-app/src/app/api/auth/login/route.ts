@@ -26,7 +26,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   await connectToDatabase();
 
-  const team = await Team.findOne({ eventId: input.eventId })
+  const team = await Team.findOne({ eventId: input.eventId, loginPin: input.pin })
     .select("+loginPin teamId teamName eventId currentModule score")
     .lean<{
       teamId: string;
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       score: number;
     } | null>();
 
-  if (!team || team.loginPin !== input.pin) {
+  if (!team) {
     return jsonError("Invalid Event ID or PIN.", 401);
   }
 
