@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { connectToDatabase } from "@/lib/db/mongodb";
 import { Team } from "@/models/Team";
-import { unlockNextModule } from "@/engine/gameEngine";
 
 interface PageProps {
   params: Promise<{
@@ -86,11 +85,9 @@ export default async function HiddenAccessPage({ params }: PageProps) {
     );
   }
 
-  // Unlock next module using game engine
-  await unlockNextModule(payload.teamId);
-
   // If all validations pass, show success message
   // This page can be replaced with actual module content
+  // Module increment will happen when participants complete the actual module tasks
   return (
     <section className="glass-panel max-w-xl space-y-4 p-8 text-center">
       <p className="font-mono text-sm uppercase tracking-[0.25em] text-primary">
