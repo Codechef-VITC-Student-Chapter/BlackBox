@@ -12,26 +12,12 @@ export default function AuthenticationModule() {
 
   useEffect(() => {
     const sequence = [
-      "BLACKBOX EVENT AUTHENTICATION",
-      "Module 1: Access Control",
-      "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-      "",
-      "INSTRUCTIONS:",
-      "1. Use your Event ID and Team PIN",
-      "2. Authenticate via POST /api/auth/login",
-      "3. JWT token stored in browser cookie",
-      "4. Inspect DevTools → Storage → Cookies",
-      "5. Decode JWT to extract hidden route",
-      "6. Change URL from /authentication to /access/[hiddenRoute]",
-      "",
-      "Example curl command:",
-      'curl -X POST http://localhost:3000/api/auth/login \\',
-      '  -H "Content-Type: application/json" \\',
-      '  -d \'{"eventId": "BLACKBOX2026", "pin": "483921"}\' \\',
-      '  -c cookies.txt',
-      "",
-      "Note: JWT is stored in browser cookie",
-      "Waiting for authentication..."
+      "Connecting to Core Auth Server...",
+      "Bypassing Subnet Firewall...",
+      "Searching Engineer Identity...",
+      "██████████ 100%",
+      "ERROR: Unknown Engineer Identity",
+      "CONNECTION FAILED"
     ];
 
     let i = 0;
@@ -97,32 +83,7 @@ export default function AuthenticationModule() {
 
         {/* Right Side: System Status */}
         <div className="lg:w-80 flex flex-col gap-4">
-          <h2 className="font-heading text-lg text-secondary-text uppercase tracking-widest mb-2">Challenge Steps</h2>
-          
-          <StepCard 
-            step={1} 
-            title="Authenticate" 
-            description="POST /api/auth/login with Event ID and PIN"
-            icon={<Key size={18} />}
-          />
-          <StepCard 
-            step={2} 
-            title="Inspect Cookie" 
-            description="Find JWT in browser DevTools"
-            icon={<Shield size={18} />}
-          />
-          <StepCard 
-            step={3} 
-            title="Decode JWT" 
-            description="Extract hidden route from payload"
-            icon={<Terminal size={18} />}
-          />
-          <StepCard 
-            step={4} 
-            title="Access Route" 
-            description="Change URL from /authentication to /access/[hiddenRoute]"
-            icon={<ArrowRight size={18} />}
-          />
+          <h2 className="font-heading text-lg text-secondary-text uppercase tracking-widest mb-2">System Status</h2>
           
           <StatusCard title="Authentication" status="FAILED" icon={<XCircle size={18} />} />
           <StatusCard title="Repository" status="LOCKED" icon={<Lock size={18} />} />
