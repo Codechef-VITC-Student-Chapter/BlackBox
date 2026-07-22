@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { Activity, ScrollText } from "lucide-react";
+import { useModuleGuard } from "@/hooks/useModuleGuard";
 
 // ─── Scan phases ────────────────────────────────────────────────────────────
 const SCAN_LINES = [
@@ -18,6 +19,7 @@ const SCAN_LINES = [
 ];
 
 export default function DiagnosticsPage() {
+  useModuleGuard(3);
   const router = useRouter();
   const [lineIndex, setLineIndex] = useState(0);
   const [done, setDone] = useState(false);

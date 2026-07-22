@@ -1,5 +1,6 @@
 import { GAME_CONFIG } from "@/config/game";
 import { connectToDatabase } from "@/lib/db/mongodb";
+import { recalculateAllTeamScores } from "@/lib/scoring/ctfd";
 import { Progress } from "@/models/Progress";
 import { Submission } from "@/models/Submission";
 import { Team } from "@/models/Team";
@@ -75,6 +76,9 @@ export async function completeModule(teamId: string, module: number): Promise<vo
     { $set: { completed: true, completedAt: new Date() } },
     { upsert: true },
   );
+
+  // Recalculate CTFd dynamic scores for all teams after module completion
+  await recalculateAllTeamScores();
 }
 
 export async function unlockNextModule(teamId: string): Promise<number> {

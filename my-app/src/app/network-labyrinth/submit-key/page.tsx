@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { KeySquare, AlertTriangle, Loader2 } from "lucide-react";
+import { useModuleGuard } from "@/hooks/useModuleGuard";
 
 const FRAGMENT_COUNT = 4;
 
 export default function GatewayRecoveryPage() {
+  useModuleGuard(3);
   const router = useRouter();
   const [fragments, setFragments] = useState<string[]>(Array(FRAGMENT_COUNT).fill(""));
   const [key, setKey] = useState("");

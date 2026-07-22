@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { Shield, GitBranch, Wifi, Database, Cpu } from "lucide-react";
+import { useModuleGuard } from "@/hooks/useModuleGuard";
 
 const SUBSYSTEMS = [
   { label: "Authentication", icon: Shield,    delay: 0.4 },
@@ -22,6 +23,7 @@ const BOOT_LINES = [
 ];
 
 export default function GatewayRestoredPage() {
+  useModuleGuard(3);
   const router = useRouter();
   const [restored, setRestored] = useState<boolean[]>([false, false, false, false, false]);
   const [bootLine, setBootLine] = useState(0);
@@ -94,7 +96,6 @@ export default function GatewayRestoredPage() {
               const Icon = sys.icon;
               const isRestored = restored[i];
               const isPending = sys.delay !== null && !isRestored;
-              const isOffline = sys.delay === null;
               return (
                 <motion.div
                   key={sys.label}
