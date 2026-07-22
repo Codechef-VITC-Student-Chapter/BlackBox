@@ -22,7 +22,7 @@ export default function AuthenticationModule() {
       });
 
       if (response.ok) {
-        setAuthStatus("Authentication successful! Check DevTools → Storage → Cookies for JWT.");
+        setAuthStatus("Authentication successful. Investigate what you received.");
         playSound("success");
       } else {
         const data = await response.json();
@@ -41,21 +41,14 @@ export default function AuthenticationModule() {
       "Module 1: Access Control",
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
       "",
-      "INSTRUCTIONS:",
-      "1. Use your Event ID and Team PIN",
-      "2. Authenticate via POST /api/auth/login",
-      "3. JWT token stored in browser cookie",
-      "4. Inspect DevTools → Storage → Cookies",
-      "5. Decode JWT to extract hidden route",
-      "6. Change URL from /authentication to /access/[hiddenRoute]",
+      "SYSTEM SECURE. AUTHENTICATION REQUIRED.",
       "",
-      "Example curl command:",
-      'curl -X POST http://localhost:3000/api/auth/login \\',
-      '  -H "Content-Type: application/json" \\',
-      '  -d \'{"eventId": "BLACKBOX2026", "pin": "483921"}\' \\',
-      '  -c cookies.txt',
+      "Your credentials have been provided.",
+      "Use them to gain access to the system.",
       "",
-      "Note: JWT is stored in browser cookie",
+      "Hint: What remains after successful authentication?",
+      "Sometimes the key is in what you receive...",
+      "",
       "Waiting for authentication..."
     ];
 
@@ -107,7 +100,7 @@ export default function AuthenticationModule() {
           <div className="p-6 border-t border-border bg-surface/30">
             <p className="font-mono text-secondary-text text-sm">
               <span className="text-primary">STATUS:</span> Awaiting authentication<br/>
-              <span className="text-text mt-2 block">Decode the JWT to proceed.</span>
+              <span className="text-text mt-2 block">Investigate your findings.</span>
             </p>
           </div>
         </div>
