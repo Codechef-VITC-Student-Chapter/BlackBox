@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { Wifi, Shield, GitBranch, Database, Cpu, Activity } from "lucide-react";
+import { useModuleGuard } from "@/hooks/useModuleGuard";
 
 const SUBSYSTEMS = [
   { label: "Authentication", status: "VERIFIED", icon: Shield, color: "text-success", dot: "bg-success" },
@@ -21,6 +22,7 @@ const METRICS = [
 ];
 
 export default function NetworkLabyrinthPage() {
+  useModuleGuard(3);
   const router = useRouter();
 
   return (
