@@ -88,6 +88,10 @@ export default async function HiddenAccessPage({ params }: PageProps) {
   // If all validations pass, show success message
   // This page can be replaced with actual module content
   // Module increment will happen when participants complete the actual module tasks
+  
+  // Extract module number from hidden route
+  const accessedModule = parseInt(hiddenRoute.split('-')[1]);
+  
   return (
     <section className="glass-panel max-w-xl space-y-4 p-8 text-center">
       <p className="font-mono text-sm uppercase tracking-[0.25em] text-primary">
@@ -99,10 +103,10 @@ export default async function HiddenAccessPage({ params }: PageProps) {
       <div className="space-y-2 font-mono text-sm text-secondary-text">
         <p>Team: {team.teamName}</p>
         <p>Event ID: {payload.eventId}</p>
-        <p>Current Module: {team.currentModule}</p>
+        <p>Accessing Module: {accessedModule}</p>
       </div>
       <p className="font-mono text-sm text-primary">
-        Proceeding to next module...
+        Complete the module tasks to proceed...
       </p>
     </section>
   );
