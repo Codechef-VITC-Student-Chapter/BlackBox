@@ -22,7 +22,7 @@ export default function AuthenticationModule() {
       });
 
       if (response.ok) {
-        setAuthStatus("Authentication successful. Investigate what you received.");
+        setAuthStatus("Authentication successful! Check DevTools → Storage → Cookies for JWT.");
         playSound("success");
       } else {
         const data = await response.json();
@@ -41,14 +41,21 @@ export default function AuthenticationModule() {
       "Module 1: Access Control",
       "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
       "",
-      "SYSTEM SECURE. AUTHENTICATION REQUIRED.",
+      "INSTRUCTIONS:",
+      "1. Use your Event ID and Team PIN",
+      "2. Authenticate via POST /api/auth/login",
+      "3. JWT token stored in browser cookie",
+      "4. Inspect DevTools → Storage → Cookies",
+      "5. Decode JWT to extract hidden route",
+      "6. Change URL from /authentication to /access/[hiddenRoute]",
       "",
-      "Your credentials have been provided.",
-      "Use them to gain access to the system.",
+      "Example curl command:",
+      'curl -X POST http://localhost:3000/api/auth/login \\',
+      '  -H "Content-Type: application/json" \\',
+      '  -d \'{"eventId": "BLACKBOX2026", "pin": "483921"}\' \\',
+      '  -c cookies.txt',
       "",
-      "Hint: What remains after successful authentication?",
-      "Sometimes the key is in what you receive...",
-      "",
+      "Note: JWT is stored in browser cookie",
       "Waiting for authentication..."
     ];
 
@@ -100,7 +107,7 @@ export default function AuthenticationModule() {
           <div className="p-6 border-t border-border bg-surface/30">
             <p className="font-mono text-secondary-text text-sm">
               <span className="text-primary">STATUS:</span> Awaiting authentication<br/>
-              <span className="text-text mt-2 block">Investigate your findings.</span>
+              <span className="text-text mt-2 block">Decode the JWT to proceed.</span>
             </p>
           </div>
         </div>
@@ -112,25 +119,25 @@ export default function AuthenticationModule() {
           <StepCard 
             step={1} 
             title="Authenticate" 
-            description="Use your credentials to access the system"
+            description="POST /api/auth/login with Event ID and PIN"
             icon={<Key size={18} />}
           />
           <StepCard 
             step={2} 
-            title="Investigate" 
-            description="Examine what you received after authentication"
+            title="Inspect Cookie" 
+            description="Find JWT in browser DevTools"
             icon={<Shield size={18} />}
           />
           <StepCard 
             step={3} 
-            title="Analyze" 
-            description="Look for patterns in the data"
+            title="Decode JWT" 
+            description="Extract hidden route from payload"
             icon={<Terminal size={18} />}
           />
           <StepCard 
             step={4} 
-            title="Proceed" 
-            description="Use your findings to access the next area"
+            title="Access Route" 
+            description="Change URL from /authentication to /access/[hiddenRoute]"
             icon={<ArrowRight size={18} />}
           />
           
