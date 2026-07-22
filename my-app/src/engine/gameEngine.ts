@@ -30,7 +30,7 @@ export async function updateScore(teamId: string, delta: number): Promise<number
   const team = await Team.findOneAndUpdate(
     { teamId },
     { $inc: { score: delta } },
-    { new: true, projection: { score: 1 } },
+    { returnDocument: 'after', projection: { score: 1 } },
   ).lean<{ score: number } | null>();
 
   if (!team) {
@@ -81,13 +81,17 @@ export async function unlockNextModule(teamId: string): Promise<number> {
   await connectToDatabase();
 
   const currentModule = await getCurrentModule(teamId);
+  console.log(`[unlockNextModule] Team ${teamId} current module: ${currentModule}`);
   const nextModule = Math.min(currentModule + 1, GAME_CONFIG.totalModules);
+  console.log(`[unlockNextModule] Team ${teamId} next module: ${nextModule}`);
 
   const team = await Team.findOneAndUpdate(
-    { teamId, currentModule },
+    { teamId },
     { $set: { currentModule: nextModule } },
-    { new: true, projection: { currentModule: 1 } },
+    { returnDocument: 'after', projection: { currentModule: 1 } },
   ).lean<{ currentModule: number } | null>();
+
+  console.log(`[unlockNextModule] Update result:`, team);
 
   if (!team) {
     throw new Error(`Unable to unlock next module for team ${teamId}`);
