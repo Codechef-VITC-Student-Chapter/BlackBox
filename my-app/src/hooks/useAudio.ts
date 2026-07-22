@@ -33,9 +33,11 @@ const [isMuted, setIsMuted] = useState(true);
       const audio = new Audio(`/sounds/${type}.mp3`);
       audio.volume = type === "ambient" ? 0.2 : 0.5;
       if (type === "ambient") audio.loop = true;
-      audio.play().catch(() => {});
+      audio.play().catch(() => {
+        // Silently fail if audio files don't exist
+      });
     } catch (e) {
-      console.warn("Audio play failed:", e);
+      // Silently fail if audio files don't exist
     }
   }, [isMuted]);
 

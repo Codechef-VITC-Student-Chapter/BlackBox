@@ -73,11 +73,6 @@ export default function VictoryCapturePage() {
                                 </p>
 
                             </div>
-                            {/* <Webcam
-                                    audio={false}
-                                    screenshotFormat="image/png"
-                                    className="rounded-xl w-full h-full object-cover"
-                                /> */}
                         </div>
 
                         {/* Instructions */}
@@ -119,7 +114,7 @@ export default function VictoryCapturePage() {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() =>
-                                    router.push("/engineer-certification/leaderboard")
+                                    router.push("/leaderboard")
                                 }
                                 className="glass-panel px-6 py-3 flex items-center gap-2"
                             >
