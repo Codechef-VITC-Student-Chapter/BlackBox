@@ -104,7 +104,7 @@ The hidden route page (`src/app/access/[hiddenRoute]/page.tsx`) currently shows 
 - Secure flag set in production (HTTPS only)
 - Hidden routes include team attributes for unique access paths
 
-### ⚠️ CRITICAL SECURITY VULNERABILITIES (MUST BE FIXED)
+### ⚠️ CRITICAL SECURITY VULNERABILITIES
 
 **HIGH SEVERITY:**
 1. **PIN exposed in JWT payload** - The team's PIN is included in the JWT token. Anyone who decodes the JWT can see the team's PIN. This allows participants to share credentials and bypass individual team authentication.

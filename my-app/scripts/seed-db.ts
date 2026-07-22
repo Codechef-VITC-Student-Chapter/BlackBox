@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Team } from "../src/models/Team";
+import { Progress } from "../src/models/Progress";
 import { GAME_CONFIG } from "../src/config/game";
 
 const mockTeams = [
@@ -40,10 +41,11 @@ async function seedDatabase() {
     await mongoose.connect(mongoUri);
     console.log("Connected to MongoDB");
 
-    // Clear existing teams
-    console.log("Clearing existing teams...");
+    // Clear existing teams and progress
+    console.log("Clearing existing teams and progress...");
     await Team.deleteMany({});
-    console.log("Cleared existing teams");
+    await Progress.deleteMany({});
+    console.log("Cleared existing teams and progress");
 
     // Insert mock teams
     console.log("Inserting mock teams...");
