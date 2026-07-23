@@ -31,6 +31,14 @@ const progressSchema = new Schema(
       type: Date,
       default: null,
     },
+    mod3Key: {
+      type: String,
+      default: "DUMMY-NET-KEY-999",
+    },
+    mod4Key: {
+      type: String,
+      default: "DUMMY-PUZ-KEY-777",
+    },
   },
   {
     timestamps: true,
