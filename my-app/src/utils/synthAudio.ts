@@ -200,6 +200,63 @@ export const synth = {
     }
   },
 
+  playGlitch() {
+    if (isMuted()) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = 'square';
+      const now = ctx.currentTime;
+      osc.frequency.setValueAtTime(120 + Math.random() * 800, now);
+      osc.frequency.setValueAtTime(40 + Math.random() * 200, now + 0.03);
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+      osc.start();
+      osc.stop(now + 0.08);
+    } catch (e) {
+      console.warn("Audio play failed:", e);
+    }
+  },
+
+  playGlitchBurst() {
+    if (isMuted()) return;
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const bufferSize = ctx.sampleRate * 0.15;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+      }
+      const whiteNoise = ctx.createBufferSource();
+      whiteNoise.buffer = buffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 800;
+      filter.Q.value = 3;
+
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.06, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+
+      whiteNoise.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+
+      whiteNoise.start();
+    } catch (e) {
+      console.warn("Audio play failed:", e);
+    }
+  },
+
   playSuccessFanfare() {
     if (isMuted()) return;
     try {

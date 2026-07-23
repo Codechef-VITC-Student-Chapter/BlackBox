@@ -8,21 +8,104 @@
   100% { transform: translate(0); }
 }
 
+@keyframes intenseShake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  10% { transform: translate(-12px, -8px) rotate(-1deg); }
+  20% { transform: translate(14px, 6px) rotate(1deg); }
+  30% { transform: translate(-16px, 12px) rotate(-1.5deg); }
+  40% { transform: translate(12px, -10px) rotate(1deg); }
+  50% { transform: translate(-10px, -14px) rotate(-0.5deg); }
+  60% { transform: translate(18px, 10px) rotate(1.5deg); }
+  70% { transform: translate(-14px, 4px) rotate(-1deg); }
+  80% { transform: translate(8px, -12px) rotate(0.5deg); }
+  90% { transform: translate(-6px, 10px) rotate(-0.5deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes gridDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 60px; }
+}
+
+@keyframes glitchTitle {
+  0% {
+    text-shadow: 2px 0 0 #ff3b5c, -2px 0 0 #00e5ff;
+    transform: translate(0);
+  }
+  15% {
+    text-shadow: -3px 0 0 #ff3b5c, 3px 0 0 #00e5ff;
+    transform: translate(-3px, 2px);
+  }
+  30% {
+    text-shadow: 4px 0 0 #ff3b5c, -4px 0 0 #00e5ff;
+    transform: translate(3px, -2px);
+  }
+  45% {
+    text-shadow: -2px 0 0 #ff3b5c, 2px 0 0 #00e5ff;
+    transform: translate(0);
+  }
+  60% {
+    text-shadow: 3px 0 0 #ff3b5c, -3px 0 0 #00e5ff;
+    transform: translate(2px, 1px);
+  }
+  100% {
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+    transform: translate(0);
+  }
+}
+
 .animate-shake {
   animation: shake 0.4s;
 }
+
+.animate-intense-shake {
+  animation: intenseShake 0.6s ease-in-out infinite;
+}
+
+.animate-glitch-title {
+  animation: glitchTitle 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+
+.bg-grid-cyber {
+  background-image: 
+    linear-gradient(to right, rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 255, 136, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridDrift 20s linear infinite;
+}
+
+.scanline-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0, 0, 0, 0.3) 50%,
+    rgba(0, 0, 0, 0.3)
+  );
+  background-size: 100% 4px;
+}
+
+.crt-vignette {
+  background: radial-gradient(circle, transparent 60%, rgba(5, 7, 11, 0.85) 100%);
+}
+
 @theme {
   --font-inter: Inter, ui-sans-serif, system-ui, sans-serif;
   --font-space-grotesk: "Space Grotesk", Inter, ui-sans-serif, system-ui, sans-serif;
   --font-jetbrains-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 
-  --color-background: #050816;
-  --color-surface: #0B1120;
-  --color-card: #111827;
-  --color-primary: #00E5FF;
-  --color-accent: #7C3AED;
-  --color-success: #22C55E;
-  --color-danger: #FF4D6D;
+  --color-background: #05070B;
+  --color-surface: #0A1020;
+  --color-card: #0F172A;
+  --color-primary: #00FF88;
+  --color-accent: #00E5FF;
+  --color-success: #00FF88;
+  --color-danger: #FF3B5C;
   --color-warning: #FACC15;
   --color-border: rgba(255, 255, 255, 0.08);
   --color-text: #FFFFFF;
@@ -34,12 +117,12 @@
 }
 
 @utility glass-panel {
-  background: rgba(17, 24, 39, 0.4);
+  background: rgba(10, 16, 32, 0.6);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+  border: 1px solid rgba(0, 255, 136, 0.15);
+  border-radius: 0.5rem;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
 }
 
 @utility text-gradient {
@@ -66,7 +149,7 @@
   }
 
   ::selection {
-    background: rgba(0, 229, 255, 0.3);
-    color: #00E5FF;
+    background: rgba(0, 255, 136, 0.3);
+    color: #00FF88;
   }
 }
