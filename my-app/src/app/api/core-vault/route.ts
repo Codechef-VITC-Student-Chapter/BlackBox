@@ -29,7 +29,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         module: 5,
         completed: false,
         attempts: 0,
-        // The default dummy keys from your schema will automatically populate here
       });
       console.log("Created dummy database entry for testing!");
     }
@@ -53,7 +52,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   } catch (error) {
     console.error("Core Vault API Error:", error);
     return NextResponse.json(
-      { success: false, message: "Server error processing request." },
+      { success: false, message: "Server error processing request!" },
       { status: 500 }
     );
   }
