@@ -3,8 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+type ProblemSummary = {
+  _id: string;
+  title: string;
+  slug: string;
+  difficulty: string;
+  published: boolean;
+};
+
 export default function AdminProblemsPage() {
-  const [problems, setProblems] = useState([]);
+  const [problems, setProblems] = useState<ProblemSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,7 +62,7 @@ export default function AdminProblemsPage() {
               </tr>
             </thead>
             <tbody>
-              {problems.map((problem: any) => (
+              {problems.map((problem) => (
                 <tr key={problem._id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                   <td className="py-2 px-4 font-medium">{problem.title}</td>
                   <td className="py-2 px-4 text-gray-600 dark:text-gray-300">{problem.slug}</td>
@@ -77,7 +85,7 @@ export default function AdminProblemsPage() {
                       onClick={async () => {
                         if (confirm("Are you sure?")) {
                           await fetch(`/api/admin/problems/${problem._id}`, { method: "DELETE" });
-                          setProblems(problems.filter((p: any) => p._id !== problem._id));
+                          setProblems(problems.filter((p) => p._id !== problem._id));
                         }
                       }}
                       className="text-red-600 dark:text-red-400 hover:underline"

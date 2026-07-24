@@ -79,7 +79,7 @@ export default function RecoveryCompletePage() {
           {/* Checklist */}
           <div className="space-y-2 select-none">
             <div className="text-[10px] text-[#264c23] uppercase tracking-widest border-b border-[#112211] pb-1 font-bold">
-              // BLACKBOX ARCHIVE STATUS
+              {"// BLACKBOX ARCHIVE STATUS"}
             </div>
             <div className="grid grid-cols-2 gap-2 text-[10px]">
               {modules.map((module) => (
@@ -96,7 +96,7 @@ export default function RecoveryCompletePage() {
 
           {/* Final Transmission */}
           <div className="bg-[#030703] border border-[#1a2d1d] rounded-md p-4 font-mono text-[10px] text-[#3c663a] leading-relaxed space-y-1">
-            <p className="text-[#33ff66] font-bold uppercase tracking-wider mb-1">// FINAL TRANSMISSION</p>
+            <p className="text-[#33ff66] font-bold uppercase tracking-wider mb-1">{"// FINAL TRANSMISSION"}</p>
             <p>Congratulations. You recovered BLACKBOX.</p>
             <p>You investigated. You observed.</p>
             <p>You connected every clue. You restored every subsystem.</p>

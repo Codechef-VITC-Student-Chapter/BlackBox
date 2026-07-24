@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { PageTransition } from "@/components/ui/PageTransition";
 
@@ -92,16 +92,59 @@ func main() {
 
 };
 
+type Problem = {
+  _id: string;
+  title: string;
+  description: string;
+  published?: boolean;
+  cpu_time_limit: number;
+  memory_limit: number;
+};
+
+type RunResult = {
+  testcase: number | string;
+  verdict: string;
+  time?: number | string;
+  memory?: number | string;
+  passed: boolean;
+  expected?: string;
+  stdout?: string;
+  error?: string;
+  stderr?: string;
+};
+
+type SubmitResult = {
+  verdict: string;
+  total?: number;
+  passed?: number;
+  time?: number | string;
+  memory?: number | string;
+  message?: string;
+  error?: string;
+};
+
+type CodingTab = "problem" | "editor" | "leaderboard";
+
+const TABS: { id: CodingTab; label: string }[] = [
+  { id: "problem", label: "PROBLEM STATEMENT" },
+  { id: "editor", label: "CODE SANDBOX" },
+  { id: "leaderboard", label: "LEADERBOARD" },
+];
+
+const getErrorMessage = (err: unknown) => (
+  err instanceof Error ? err.message : "Unexpected error"
+);
+
 
 
 export default function CodingPage() {
 
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<"problem" | "editor" | "leaderboard">("problem");
+  const [activeTab, setActiveTab] = useState<CodingTab>("problem");
 
   // Problem state
-  const [problem, setProblem] = useState<any>(null);
+  const [problem, setProblem] = useState<Problem | null>(null);
 
   // Editor states
 
@@ -133,9 +176,9 @@ export default function CodingPage() {
   useEffect(() => {
     fetch("/api/admin/problems")
       .then(res => res.json())
-      .then(data => {
+      .then((data: Problem[]) => {
         if (Array.isArray(data) && data.length > 0) {
-          const firstProb = data.find((p: any) => p.published) || data[0];
+          const firstProb = data.find((p) => p.published) || data[0];
           setProblem(firstProb);
         }
       })
@@ -230,6 +273,12 @@ export default function CodingPage() {
     }
   };
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
   const handleRunCode = async () => {
     if (!problem) return;
     synth.playClick();
@@ -248,11 +297,15 @@ export default function CodingPage() {
         })
       });
       
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Execution failed");
+      const data = await res.json() as RunResult[] | { error?: string };
+      if (!res.ok) {
+        throw new Error(Array.isArray(data) ? "Execution failed" : data.error || "Execution failed");
+      }
       
       const logs = ["Execution Completed!"];
-      data.forEach((tc: any) => {
+      if (!Array.isArray(data)) throw new Error("Execution failed");
+
+      data.forEach((tc) => {
         logs.push(`Testcase #${tc.testcase}: ${tc.verdict} [${tc.time || 0}s, ${tc.memory || 0}KB]`);
         if (!tc.passed) {
           logs.push(`  Expected: ${tc.expected || "hidden"}`);
@@ -262,8 +315,8 @@ export default function CodingPage() {
       
       setConsoleLogs(logs);
       synth.playSuccess();
-    } catch (err: any) {
-      setConsoleLogs(["> ERROR: " + err.message]);
+    } catch (err: unknown) {
+      setConsoleLogs(["> ERROR: " + getErrorMessage(err)]);
     } finally {
       setIsRunning(false);
     }
@@ -292,7 +345,7 @@ export default function CodingPage() {
         })
       });
       
-      const data = await res.json();
+      const data = await res.json() as SubmitResult;
       if (!res.ok) throw new Error(data.error || "Submission failed");
       
       if (data.verdict === "Accepted") {
@@ -311,427 +364,12 @@ export default function CodingPage() {
           `Passed: ${data.passed} / ${data.total}`
         ]);
       }
-    } catch (err: any) {
-      setConsoleLogs(["> ERROR: " + err.message]);
+    } catch (err: unknown) {
+      setConsoleLogs(["> ERROR: " + getErrorMessage(err)]);
     } finally {
       setIsRunning(false);
     }
   };
-
-      setIsRunning(false);
-
-      setTimeLeft(0);
-
-    }, 2000);
-
-  }
-
-
-
-return (
-
-  <PageTransition>
-
-    <div className="h-screen w-screen bg-[#020502] text-[#33ff66] font-mono overflow-hidden">
-
-
-
-      {/* Header */}
-
-      <div className="h-12 border-b border-[#1a2d1d] flex items-center justify-between px-6 bg-[#030703]">
-
-        <div className="text-sm font-bold tracking-widest">
-
-          BLACKBOX // ENGINEER CERTIFICATION
-
-        </div>
-
-
-
-        <div className="text-xs text-[#3c663a]">
-
-          TIME LEFT : {formatTime(timeLeft)}
-
-        </div>
-
-      </div>
-
-
-
-
-
-      {/* Leetcode Layout */}
-
-      <div className="h-[calc(100vh-48px)] grid grid-cols-2">
-
-
-
-
-
-        {/* LEFT : PROBLEM */}
-
-        <div className="border-r border-[#1a2d1d] overflow-y-auto p-6">
-
-
-
-          <h1 className="text-white text-xl font-bold mb-6">
-
-            Corrupted Network Nodes
-
-          </h1>
-
-
-
-
-
-          <section className="space-y-5 text-sm text-[#9ca3af] leading-relaxed">
-
-
-
-            <div>
-
-              <h2 className="text-[#33ff66] font-bold mb-2">
-
-                Problem Statement
-
-              </h2>
-
-
-
-              <p>
-
-                During the recovery of the BLACKBOX infrastructure,
-
-                several communication nodes became corrupted.
-
-                Determine the minimum recovery operations required
-
-                to reconnect the system.
-
-              </p>
-
-            </div>
-
-
-
-
-
-            <div>
-
-              <h2 className="text-[#33ff66] font-bold mb-2">
-
-                Input Format
-
-              </h2>
-
-
-
-              <p>
-
-                First line contains N and M.
-
-                <br />
-
-                Next M lines contain two integers U and V.
-
-              </p>
-
-            </div>
-
-
-
-
-
-            <div>
-
-              <h2 className="text-[#33ff66] font-bold mb-2">
-
-                Output Format
-
-              </h2>
-
-
-
-              <p>
-
-                Print the minimum operations required.
-
-              </p>
-
-            </div>
-
-
-
-
-
-            <div>
-
-              <h2 className="text-[#33ff66] font-bold mb-2">
-
-                Constraints
-
-              </h2>
-
-
-
-              <div className="bg-[#030703] border border-[#1a2d1d] p-3">
-
-                1 ≤ N ≤ 2 × 10⁵
-
-                <br />
-
-                0 ≤ M ≤ 2 × 10⁵
-
-              </div>
-
-
-
-            </div>
-
-
-
-
-
-            <div>
-
-              <h2 className="text-[#33ff66] font-bold mb-2">
-
-                Example
-
-              </h2>
-
-
-
-              <pre className="bg-[#030703] border border-[#1a2d1d] p-4 text-[#33ff66]">
-
-{`Input:
-
-4 2
-
-1 2
-
-3 4
-
-
-
-Output:
-
-1`}
-
-              </pre>
-
-
-
-            </div>
-
-
-
-
-
-          </section>
-
-
-
-        </div>
-
-
-
-
-
-
-
-
-
-        {/* RIGHT : CODE EDITOR */}
-
-        <div className="flex flex-col p-4 gap-3">
-
-
-
-
-
-          {/* Language */}
-
-          <div className="flex justify-between items-center">
-
-
-
-            <span className="text-xs text-[#3c663a]">
-
-              LANGUAGE
-
-            </span>
-
-
-
-
-
-            <select
-
-              value={language}
-
-              onChange={(e)=>changeLanguage(e.target.value)}
-
-              className="
-
-                bg-[#030703]
-
-                border border-[#1a2d1d]
-
-                text-[#33ff66]
-
-                px-3 py-1
-
-                text-xs
-
-              "
-
-            >
-
-
-
-              <option value="cpp">
-
-                C++
-
-              </option>
-
-
-
-              <option value="java">
-
-                Java
-
-              </option>
-
-
-
-              <option value="python">
-
-                Python
-
-              </option>
-
-
-
-              <option value="go">
-
-                Go
-
-              </option>
-
-
-
-            </select>
-
-
-
-          </div>
-
-
-
-
-
-
-
-
-
-          {/* Monaco */}
-
-          <div className="
-
-              flex-1
-
-              border
-
-              border-[#1a2d1d]
-
-              bg-[#020502]
-
-              overflow-hidden
-
-              relative
-
-          ">
-
-
-
-            <Editor
-
-              height="100%"
-
-              language={language==="cpp" ? "cpp" : language}
-
-              value={code}
-
-              onChange={(val)=>setCode(val || "")}
-
-              theme="vs-dark"
-
-              options={{
-
-                fontSize:14,
-
-                minimap:{enabled:false},
-
-                automaticLayout:true,
-
-                scrollBeyondLastLine:false,
-
-                padding:{
-
-                  top:15
-
-                }
-
-              }}
-
-            />
-
-
-
-          </div>
-
-
-
-
-
-
-
-
-
-          {/* Console */}
-
-
-
-          <div className="
-
-              h-28
-
-              bg-[#030703]
-
-              border
-
-              border-[#1a2d1d]
-
-              p-3
-
-              text-xs
-
-              overflow-y-auto
-
-          ">
-
-
-
-            {consoleLogs.map((log,index)=>(
-
-              <div key={index}>
-
-                &gt; {log}
-
-              </div>
-
   return (
     <PageTransition>
       <BlackboxShell
@@ -765,23 +403,19 @@ Output:
         <div className="flex-1 flex flex-col justify-between overflow-hidden">
           {/* Tab selectors */}
           <div className="flex items-center gap-1.5 border-b border-[#1a2d1d] pb-2 mb-3 select-none flex-shrink-0">
-            {[
-              { id: "problem", label: "PROBLEM STATEMENT" },
-              { id: "editor", label: "CODE SANDBOX" },
-              { id: "leaderboard", label: `LEADERBOARD [${formatTime(timeLeft)}]` }
-            ].map(tab => (
+            {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => {
                   synth.playClick();
-                  setActiveTab(tab.id as any);
+                  setActiveTab(tab.id);
                 }}
                 className={`border font-mono text-[10px] px-3 py-1 font-bold transition-all duration-200 cursor-pointer ${activeTab === tab.id
                     ? "border-[#33ff66] text-black bg-[#33ff66]"
                     : "border-[#1a2d1d] text-[#3c663a] bg-[#020502] hover:text-[#33ff66] hover:border-[#33ff66]/40"
                   }`}
               >
-                {tab.label}
+                {tab.id === "leaderboard" ? `${tab.label} [${formatTime(timeLeft)}]` : tab.label}
               </button>
             ))}
 
@@ -907,7 +541,7 @@ Output:
               >
                 <div className="bg-[#040e04] border border-[#1a2d1d] rounded-md p-4 space-y-4">
                   <div className="flex justify-between items-center border-b border-[#1a2d1d] pb-2">
-                    <span className="font-bold uppercase tracking-wider">// PLATFORM STANDINGS</span>
+                    <span className="font-bold uppercase tracking-wider">{"// PLATFORM STANDINGS"}</span>
                     {leaderboardLoading && <span className="animate-pulse">POLLING GATEWAY...</span>}
                   </div>
 
@@ -936,25 +570,8 @@ Output:
               </motion.div>
             )}
           </div>
-
-
-
-
-
         </div>
-
-
-
-
-
-      </div>
-
-
-
-    </div>
-
-  </PageTransition>
-
-);
-
+      </BlackboxShell>
+    </PageTransition>
+  );
 }

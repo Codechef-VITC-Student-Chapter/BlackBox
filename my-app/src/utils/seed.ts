@@ -34,7 +34,7 @@ export async function seedProblem(data: ProblemSeedData) {
     problem.cpu_time_limit = data.limits.cpu;
     problem.wall_time_limit = data.limits.wall;
     problem.memory_limit = data.limits.memory;
-    problem.supported_languages = data.languages;
+    problem.set("supported_languages", data.languages);
     problem.published = true;
     await problem.save();
   } else {

@@ -3,12 +3,41 @@
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 
+type SupportedLanguage = {
+  language_id: number;
+  starter_code: string;
+};
+
+type ProblemForm = {
+  title: string;
+  slug: string;
+  description: string;
+  difficulty: string;
+  cpu_time_limit: number;
+  wall_time_limit: number;
+  memory_limit: number;
+  published: boolean;
+  supported_languages: SupportedLanguage[];
+};
+
+type TestcaseForm = {
+  input: string;
+  expected_output?: string;
+  output?: string;
+  hidden: boolean;
+  weight: number;
+};
+
+const getErrorMessage = (err: unknown) => (
+  err instanceof Error ? err.message : "Unexpected error"
+);
+
 export default function EditProblemPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const isNew = resolvedParams.id === "new";
   const router = useRouter();
 
-  const [problem, setProblem] = useState({
+  const [problem, setProblem] = useState<ProblemForm>({
     title: "",
     slug: "",
     description: "",
@@ -20,7 +49,7 @@ export default function EditProblemPage({ params }: { params: Promise<{ id: stri
     supported_languages: [{ language_id: 54, starter_code: "" }],
   });
 
-  const [testcases, setTestcases] = useState<any[]>([]);
+  const [testcases, setTestcases] = useState<TestcaseForm[]>([]);
   const [loading, setLoading] = useState(!isNew);
 
   useEffect(() => {
@@ -76,8 +105,8 @@ export default function EditProblemPage({ params }: { params: Promise<{ id: stri
         }
         router.push("/admin/problems");
       }
-    } catch (err: any) {
-      alert("Error saving problem: " + err.message);
+    } catch (err: unknown) {
+      alert("Error saving problem: " + getErrorMessage(err));
     }
   };
 
