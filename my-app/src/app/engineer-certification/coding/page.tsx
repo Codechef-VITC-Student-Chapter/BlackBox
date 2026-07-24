@@ -37,15 +37,20 @@ export default function CodingPage() {
   ]);
   const [isExecuting, setIsExecuting] = useState(false);
 
-  const handleRunCode = async () => {
+  const handleRunCode = async (stdin?: string | any, expectedOutput?: string | any) => {
+    // Ensure we don't accidentally receive a React Event object from a button click
+    const validStdin = typeof stdin === 'string' ? stdin : undefined;
+    const validExpectedOutput = typeof expectedOutput === 'string' ? expectedOutput : undefined;
+
     setIsExecuting(true);
     setConsoleOutput(prev => [...prev, `\n> Executing ${language} code...`]);
+    if (validStdin) setConsoleOutput(prev => [...prev, `Input: ${validStdin}`]);
 
     try {
       const response = await fetch("/api/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, language }),
+        body: JSON.stringify({ code, language, stdin: validStdin, expectedOutput: validExpectedOutput }),
       });
 
       const result = await response.json();
@@ -83,7 +88,13 @@ export default function CodingPage() {
   };
 
   const handleSubmit = async () => {
-    await handleRunCode();
+    // Example of Validation: Send standard input (stdin) and expected output
+    // In a real app, you would fetch these test cases from your database based on the Problem ID.
+    const dummyStdin = "2 3\n";
+    const dummyExpectedOutput = "5\n"; 
+    
+    setConsoleOutput(prev => [...prev, `\n> Running Test Cases for Validation...`]);
+    await handleRunCode(dummyStdin, dummyExpectedOutput);
   };
 
   return (

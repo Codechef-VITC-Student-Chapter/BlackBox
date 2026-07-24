@@ -9,7 +9,7 @@ export interface Judge0Response {
   status: { id: number; description: string };
 }
 
-export async function executeCode(code: string, languageId: number): Promise<Judge0Response> {
+export async function executeCode(code: string, languageId: number, stdin?: string, expectedOutput?: string): Promise<Judge0Response> {
   const url = process.env.JUDGE0_API_URL;
   const token = process.env.JUDGE0_AUTH_TOKEN;
 
@@ -31,6 +31,8 @@ export async function executeCode(code: string, languageId: number): Promise<Jud
     body: JSON.stringify({
       source_code: code,
       language_id: languageId,
+      stdin: stdin || undefined,
+      expected_output: expectedOutput || undefined,
     }),
   });
 

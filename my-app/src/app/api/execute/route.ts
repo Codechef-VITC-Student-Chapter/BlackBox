@@ -10,7 +10,7 @@ const LANGUAGE_MAP: Record<string, number> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { code, language } = await req.json();
+    const { code, language, stdin, expectedOutput } = await req.json();
 
     if (!code || !language) {
       return NextResponse.json(
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await executeCode(code, languageId);
+    const result = await executeCode(code, languageId, stdin, expectedOutput);
     
     return NextResponse.json(result);
   } catch (error: any) {
