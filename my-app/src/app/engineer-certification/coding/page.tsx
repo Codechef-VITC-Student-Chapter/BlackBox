@@ -1,150 +1,429 @@
 "use client";
 
-import { useState } from "react";
-import { PageTransition } from "@/components/ui/PageTransition";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { PageTransition } from "@/components/ui/PageTransition";
+import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
+import { synth } from "@/utils/synthAudio";
+import Editor from "@monaco-editor/react";
+import type { LeaderboardEntry } from "@/lib/scoring/ctfd";
 
-import ProblemSection from "@/components/certification/ProblemSection";
-import LeaderboardSection from "@/components/certification/LeaderboardSection";
-import EditorSection from "@/components/certification/EditorSection";
-import BottomBar from "@/components/certification/BottomBar";
-import VerdictModal from "@/components/certification/VerdictModal";
+const STATUS_CARDS: StatusCardInfo[] = [
+  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
+  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
+  { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
+  { title: "Visual/Puzzle", status: "COMPLETE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
+  { title: "Core Vault", status: "COMPLETE", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
+  { title: "Certification", status: "ACTIVE", modId: "MOD-06", serial: "SN:84-E6", iconType: "cert" },
+];
 
-const starterCode = {
-  cpp: `#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n\n    return 0;\n}`,
-  java: `public class Main {\n\n    public static void main(String[] args) {\n\n    }\n\n}`,
-  python: `def solve():\n    pass\n\nif __name__ == "__main__":\n    solve()\n`,
-  go: `package main\n\nimport "fmt"\n\nfunc main() {\n\n}\n`,
+const STARTER_CODE = {
+  cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    // Write your code here
+    return 0;
+}`,
+  java: `public class Main {
+    public static void main(String[] args) {
+        // Write your code here
+    }
+}`,
+  python: `def solve():
+    # Write your code here
+    pass
+
+if __name__ == "__main__":
+    solve()`,
+  go: `package main
+
+import "fmt"
+
+func main() {
+    // Write your code here
+}`
 };
 
 export default function CodingPage() {
-  const [showVerdict, setShowVerdict] = useState(false);
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"problem" | "editor" | "leaderboard">("problem");
 
-  // Lifted state from EditorSection
+  // Problem state
+  const [problem, setProblem] = useState<any>(null);
+
+  // Editor states
   const [language, setLanguage] = useState("cpp");
-  const [code, setCode] = useState(starterCode.cpp);
+  const [code, setCode] = useState(STARTER_CODE.cpp);
+  const [consoleLogs, setConsoleLogs] = useState<string[]>([
+    "BLACKBOX Judge Ready.",
+    "Awaiting code execution..."
+  ]);
+  const [isRunning, setIsRunning] = useState(false);
+
+  // Leaderboard states
+  const [timeLeft, setTimeLeft] = useState(45 * 60);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+
+  // Fetch first published problem
+  useEffect(() => {
+    fetch("/api/admin/problems")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          const firstProb = data.find((p: any) => p.published) || data[0];
+          setProblem(firstProb);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  // Timer countdown
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Fetch leaderboard
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchLeaderboard() {
+      try {
+        const res = await fetch("/api/leaderboard");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && Array.isArray(data.leaderboard)) {
+            setLeaderboard(data.leaderboard);
+          }
+        }
+      } catch (err) {
+        console.error("Leaderboard fetch error:", err);
+      } finally {
+        if (isMounted) setLeaderboardLoading(false);
+      }
+    }
+    fetchLeaderboard();
+    const interval = setInterval(fetchLeaderboard, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const changeLanguage = (lang: string) => {
+    synth.playClick();
     setLanguage(lang);
-    setCode(starterCode[lang as keyof typeof starterCode]);
+    setCode(STARTER_CODE[lang as keyof typeof STARTER_CODE]);
   };
 
-  // State for BottomBar (Judge0 integration)
-  const [consoleOutput, setConsoleOutput] = useState<string[]>([
-    "BLACKBOX Judge Ready.",
-    "Waiting for submission..."
-  ]);
-  const [isExecuting, setIsExecuting] = useState(false);
-
-  const handleRunCode = async (stdin?: string | any, expectedOutput?: string | any) => {
-    // Ensure we don't accidentally receive a React Event object from a button click
-    const validStdin = typeof stdin === 'string' ? stdin : undefined;
-    const validExpectedOutput = typeof expectedOutput === 'string' ? expectedOutput : undefined;
-
-    setIsExecuting(true);
-    setConsoleOutput(prev => [...prev, `\n> Executing ${language} code...`]);
-    if (validStdin) setConsoleOutput(prev => [...prev, `Input: ${validStdin}`]);
-
-    try {
-      const response = await fetch("/api/execute", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, language, stdin: validStdin, expectedOutput: validExpectedOutput }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        setConsoleOutput(prev => [...prev, `Error: ${result.error || "Failed to execute"}`]);
-        return;
-      }
-
-      // Format Judge0 result
-      const newOutput = [];
-      if (result.compile_output) {
-        newOutput.push(`Compiler Output:\n${result.compile_output}`);
-      }
-      if (result.stdout) {
-        newOutput.push(`stdout:\n${result.stdout}`);
-      }
-      if (result.stderr) {
-        newOutput.push(`stderr:\n${result.stderr}`);
-      }
-      if (result.message) {
-        newOutput.push(`Message:\n${result.message}`);
-      }
-      
-      newOutput.push(`Status: ${result.status?.description}`);
-      newOutput.push(`Time: ${result.time}s | Memory: ${result.memory}KB`);
-
-      setConsoleOutput(prev => [...prev, ...newOutput]);
-
-    } catch (err: any) {
-      setConsoleOutput(prev => [...prev, `Exception: ${err.message}`]);
-    } finally {
-      setIsExecuting(false);
+  const mapLangToId = (lang: string) => {
+    switch (lang) {
+      case "cpp": return 54;
+      case "java": return 62;
+      case "python": return 71;
+      case "go": return 60;
+      default: return 54;
     }
   };
 
-  const handleSubmit = async () => {
-    // Example of Validation: Send standard input (stdin) and expected output
-    // In a real app, you would fetch these test cases from your database based on the Problem ID.
-    const dummyStdin = "2 3\n";
-    const dummyExpectedOutput = "5\n"; 
+  const handleRunCode = async () => {
+    if (!problem) return;
+    synth.playClick();
+    setIsRunning(true);
+    setConsoleLogs(["Compiling source code...", "Executing public test cases..."]);
     
-    setConsoleOutput(prev => [...prev, `\n> Running Test Cases for Validation...`]);
-    await handleRunCode(dummyStdin, dummyExpectedOutput);
+    try {
+      const res = await fetch("/api/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problem_id: problem._id,
+          language_id: mapLangToId(language),
+          source_code: code,
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Execution failed");
+      
+      const logs = ["Execution Completed!"];
+      data.forEach((tc: any) => {
+        logs.push(`Testcase #${tc.testcase}: ${tc.verdict} [${tc.time || 0}s, ${tc.memory || 0}KB]`);
+        if (!tc.passed) {
+          logs.push(`  Expected: ${tc.expected || "hidden"}`);
+          logs.push(`  Got:      ${tc.stdout?.trim() || tc.error || tc.stderr || "Empty output"}`);
+        }
+      });
+      
+      setConsoleLogs(logs);
+      synth.playSuccess();
+    } catch (err: any) {
+      setConsoleLogs(["> ERROR: " + err.message]);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const handleSubmitCode = async () => {
+    if (!problem) return;
+    synth.playClick();
+    setIsRunning(true);
+    setConsoleLogs([
+      "Compiling source code...",
+      "Submitting to BLACKBOX grading queue...",
+      "Evaluating all hidden test cases..."
+    ]);
+    
+    try {
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problem_id: problem._id,
+          language_id: mapLangToId(language),
+          source_code: code,
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Submission failed");
+      
+      if (data.verdict === "Accepted") {
+        synth.playSuccess();
+        setConsoleLogs([
+          "GRADING COMPLETED.",
+          `SUCCESS: ALL ${data.total} TESTCASES PASSED!`,
+          `Time: ${data.time}s | Memory: ${data.memory}KB`,
+          "Rerouting to verdict console..."
+        ]);
+        setTimeout(() => router.push("/engineer-certification/verdict"), 2500);
+      } else {
+        setConsoleLogs([
+          "GRADING COMPLETED.",
+          `FAILED: ${data.message}`,
+          `Passed: ${data.passed} / ${data.total}`
+        ]);
+      }
+    } catch (err: any) {
+      setConsoleLogs(["> ERROR: " + err.message]);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const formatTime = (timeSec: number) => {
+    const minutes = Math.floor(timeSec / 60);
+    const seconds = timeSec % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   };
 
   return (
     <PageTransition>
-      <div className="flex flex-col gap-6">
-        {/* Top Section */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Problem Statement */}
-          <div className="xl:col-span-2 h-[650px]">
-            <ProblemSection />
+      <BlackboxShell
+        moduleCode="MOD-06"
+        exeName="CODE_SANDBOX.EXE"
+        terminalLabel="SECURE CODE INTERPRETER"
+        maintenanceSeal="#4096"
+        pwrLight="green"
+        errLight="red"
+        errLabel="ERR"
+        terminalHeaderExe="sandbox_compiler.log"
+        baudRate="9600 BAUD"
+        ttyNumber="TTY-06"
+        directiveTitle="CLASSIFIED DIRECTIVE // CODE CHALLENGE"
+        directiveText={
+          <>
+            Complete the programming challenge in the code editor.
+            <br />
+            Ensure all constraints are met before sending to the grading queue.
+          </>
+        }
+        statusLabel="SYSTEM STATUS"
+        statusCards={STATUS_CARDS}
+        radarLabel="SANDBOX"
+        radarSublabel="COMPILER ACTIVE"
+        bottomBarText="CAUTION: CODE EXECUTION MONITORED"
+        bottomBarSerial="#8409-CODING"
+        wallStencil="CONTROL ROOM 04 // ENG SECTOR"
+        compactStatus={true}
+      >
+        <div className="flex-1 flex flex-col justify-between overflow-hidden">
+          {/* Tab selectors */}
+          <div className="flex items-center gap-1.5 border-b border-[#1a2d1d] pb-2 mb-3 select-none flex-shrink-0">
+            {[
+              { id: "problem", label: "PROBLEM STATEMENT" },
+              { id: "editor", label: "CODE SANDBOX" },
+              { id: "leaderboard", label: `LEADERBOARD [${formatTime(timeLeft)}]` }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  synth.playClick();
+                  setActiveTab(tab.id as any);
+                }}
+                className={`border font-mono text-[10px] px-3 py-1 font-bold transition-all duration-200 cursor-pointer ${activeTab === tab.id
+                    ? "border-[#33ff66] text-black bg-[#33ff66]"
+                    : "border-[#1a2d1d] text-[#3c663a] bg-[#020502] hover:text-[#33ff66] hover:border-[#33ff66]/40"
+                  }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-          {/* Timer + Leaderboard */}
-          <div className="h-[650px]">
-            <LeaderboardSection />
+
+          {/* Tab Content Areas */}
+          <div className="flex-1 overflow-y-auto min-h-0 relative">
+            {activeTab === "problem" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-4 font-mono text-xs text-[#3c663a] leading-relaxed pr-2"
+              >
+                <div className="border border-[#1a2d1d] bg-[#040e04] rounded-md p-4 space-y-4">
+                  {problem ? (
+                    <>
+                      <div>
+                        <h2 className="text-white text-sm font-bold uppercase tracking-wider mb-1">
+                          {problem.title}
+                        </h2>
+                        <div 
+                          className="text-[#3c663a] whitespace-pre-wrap"
+                          dangerouslySetInnerHTML={{ __html: problem.description }}
+                        />
+                      </div>
+
+                      <div>
+                        <h3 className="text-[#33ff66] font-bold uppercase tracking-wide mb-1">
+                          Constraints
+                        </h3>
+                        <div className="bg-[#030703] border border-[#1a2d1d] p-3 text-[10px] space-y-0.5">
+                          <p>CPU Limit: {problem.cpu_time_limit}s</p>
+                          <p>Memory Limit: {problem.memory_limit} KB</p>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div>Loading problem data...</div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "editor" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col h-full space-y-3 min-h-0"
+              >
+                {/* Editor settings */}
+                <div className="flex justify-between items-center bg-[#040e04] border border-[#1a2d1d] px-3 py-2 rounded-md flex-shrink-0 select-none">
+                  <span className="font-mono text-[10px] text-[#3c663a] font-bold">EDITOR LANGUAGE</span>
+                  <select
+                    value={language}
+                    onChange={(e) => changeLanguage(e.target.value)}
+                    className="bg-[#030703] border border-[#1a2d1d] px-3 py-1 font-mono text-xs text-[#33ff66] focus:outline-none"
+                  >
+                    <option value="cpp">C++</option>
+                    <option value="java">Java</option>
+                    <option value="python">Python</option>
+                    <option value="go">Go</option>
+                  </select>
+                </div>
+
+                {/* Monaco Editor Container */}
+                <div className="flex-1 border border-[#1a2d1d] bg-[#020502] overflow-hidden min-h-[180px] relative">
+                  <Editor
+                    height="100%"
+                    language={language === "cpp" ? "cpp" : language}
+                    value={code}
+                    onChange={(val) => setCode(val || "")}
+                    theme="vs-dark"
+                    options={{
+                      fontSize: 12,
+                      fontFamily: "Courier New, monospace",
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      automaticLayout: true,
+                      padding: { top: 10 }
+                    }}
+                  />
+                </div>
+
+                {/* Console Log stream */}
+                <div className="bg-[#030703] border border-[#1a2d1d] rounded-md p-3.5 font-mono text-[10px] h-24 overflow-y-auto flex-shrink-0 space-y-0.5">
+                  {consoleLogs.map((log, idx) => (
+                    <div key={idx} className="text-[#3c663a]">
+                      &gt; <span className={log.includes("SUCCESS") || log.includes("COMPLETED") ? "text-[#33ff66] font-bold" : ""}>{log}</span>
+                    </div>
+                  ))}
+                  {isRunning && (
+                    <span className="inline-block w-1.5 h-3 bg-[#33ff66] animate-pulse align-middle ml-1" />
+                  )}
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-3 flex-shrink-0 select-none">
+                  <button
+                    onClick={handleRunCode}
+                    disabled={isRunning}
+                    className="flex-1 border border-[#1a2d1d] text-[#3c663a] bg-transparent hover:border-[#33ff66] hover:text-[#33ff66] transition-all duration-250 py-2.5 font-mono text-xs font-bold uppercase cursor-pointer"
+                  >
+                    RUN CODE
+                  </button>
+                  <button
+                    onClick={handleSubmitCode}
+                    disabled={isRunning}
+                    className="flex-1 border border-[#33ff66] text-black bg-[#33ff66] hover:shadow-[0_0_10px_rgba(51,255,102,0.6)] transition-all duration-250 py-2.5 font-mono text-xs font-bold uppercase cursor-pointer"
+                  >
+                    SUBMIT SOLUTION
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "leaderboard" && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-3 font-mono text-xs text-[#3c663a]"
+              >
+                <div className="bg-[#040e04] border border-[#1a2d1d] rounded-md p-4 space-y-4">
+                  <div className="flex justify-between items-center border-b border-[#1a2d1d] pb-2">
+                    <span className="font-bold uppercase tracking-wider">// PLATFORM STANDINGS</span>
+                    {leaderboardLoading && <span className="animate-pulse">POLLING GATEWAY...</span>}
+                  </div>
+
+                  {leaderboard.length === 0 && !leaderboardLoading ? (
+                    <div className="text-center py-6 text-[#3c663a]/50">No team scores recorded yet.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {leaderboard.map((team) => (
+                        <div
+                          key={team.teamId}
+                          className="bg-[#020502] border border-[#1a2d1d] p-3 flex justify-between items-center text-[10px] hover:border-[#33ff66]/30 transition-colors"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#f59e0b] font-bold">#{team.rank}</span>
+                            <span className="text-white font-bold truncate max-w-[140px]">{team.teamName}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[#33ff66] font-bold block">{team.score} PTS</span>
+                            <span className="text-[8px] text-[#3c663a]">{team.modulesCompleted} / 7 COMPLETED</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
-
-        {/* Code Editor */}
-        <EditorSection 
-          language={language}
-          code={code}
-          setCode={setCode}
-          changeLanguage={changeLanguage}
-        />
-
-        {/* Console + Buttons */}
-        <BottomBar 
-          consoleOutput={consoleOutput}
-          isExecuting={isExecuting}
-          onRunCode={handleRunCode}
-          onSubmit={handleSubmit}
-        />
-      </div>
-
-      {/* Temporary Verdict Modal */}
-      <VerdictModal
-        open={showVerdict}
-        verdict="Accepted"
-        passed={15}
-        total={15}
-        onClose={() => setShowVerdict(false)}
-      />
-
-      {/* Temporary Floating Button (Remove after backend integration) */}
-      <button
-        onClick={() => router.push("/engineer-certification/verdict")}
-        className="fixed bottom-8 right-8 px-5 py-3 rounded-md bg-primary text-black font-bold shadow-lg hover:scale-105 transition"
-      >
-        Test Verdict
-      </button>
+      </BlackboxShell>
     </PageTransition>
   );
 }

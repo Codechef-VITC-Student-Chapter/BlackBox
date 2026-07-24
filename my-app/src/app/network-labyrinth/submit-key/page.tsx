@@ -4,12 +4,23 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
-import { MagneticButton } from "@/components/ui/MagneticButton";
-import { KeySquare, AlertTriangle, Loader2 } from "lucide-react";
+import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
+import { synth } from "@/utils/synthAudio";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { useModuleGuard } from "@/hooks/useModuleGuard";
 
 const FRAGMENT_COUNT = 4;
 
+const STATUS_CARDS: StatusCardInfo[] = [
+  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
+  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
+  { title: "Network", status: "ACTIVE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
+  { title: "Visual/Puzzle", status: "LOCKED", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
+  { title: "Core Vault", status: "LOCKED", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
+];
+
 export default function GatewayRecoveryPage() {
+  useModuleGuard(3);
   const router = useRouter();
   const [fragments, setFragments] = useState<string[]>(Array(FRAGMENT_COUNT).fill(""));
   const [key, setKey] = useState("");
@@ -39,63 +50,64 @@ export default function GatewayRecoveryPage() {
       const data = await res.json();
       if (res.ok && data.valid) {
         setStatus("success");
+        synth.playSuccess();
         setTimeout(() => router.push("/network-labyrinth/success"), 1200);
       } else {
         setStatus("error");
+        synth.playError();
         setErrorMsg(data.message ?? "Invalid Recovery Key.");
       }
     } catch {
       setStatus("error");
+      synth.playError();
       setErrorMsg("Connection error. Try again.");
     }
   };
 
   return (
     <PageTransition>
-      <div className="flex flex-col items-center justify-center min-h-[80vh] w-full max-w-lg mx-auto space-y-6">
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-1"
-        >
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
-            Module 03 · Recovery
-          </p>
-          <h1 className="font-heading text-3xl font-bold text-text">
-            GATEWAY RECOVERY
-          </h1>
-        </motion.div>
-
-        {/* Form panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
-          className="glass-panel w-full overflow-hidden"
-        >
-          {/* Panel header */}
-          <div className="flex items-center gap-3 border-b border-border bg-surface/40 px-5 py-3">
-            <KeySquare size={15} className="text-primary" />
-            <span className="font-mono text-xs tracking-widest text-secondary-text uppercase">
-              Key Assembly Terminal
-            </span>
-          </div>
-
-          <div className="px-6 py-6 space-y-6">
+      <BlackboxShell
+        moduleCode="MOD-03"
+        exeName="FRAGMENT_SUBMIT.EXE"
+        terminalLabel="KEY FRAGMENT ASSEMBLER"
+        maintenanceSeal="#4093"
+        pwrLight="green"
+        errLight="red"
+        errLabel="ERR"
+        terminalHeaderExe="gateway_rebuild.out"
+        baudRate="1200 BAUD"
+        ttyNumber="TTY-03"
+        directiveTitle="CLASSIFIED DIRECTIVE // KEY ASSEMBLY"
+        directiveText={
+          <>
+            Gateway recovery requires assembling the 4 fragments.
+            <br />
+            Ensure fragments and master recovery key signatures align.
+          </>
+        }
+        statusLabel="SYSTEM STATUS"
+        statusCards={STATUS_CARDS}
+        radarLabel="ASSEMBLING"
+        radarSublabel="KEY VALIDATOR"
+        bottomBarText="CAUTION: FRAGMENT INTEGRITY CHECK ACTIVE"
+        bottomBarSerial="#8409-NETKEY"
+        wallStencil="CONTROL ROOM 04 // GATEWAY SECTOR"
+      >
+        <div className="flex-1 overflow-y-auto flex flex-col justify-between space-y-4">
+          <div className="space-y-4">
+            <div className="text-[10px] text-[#3c663a] uppercase tracking-widest border-b border-[#1a2d1d] pb-1.5 mb-2 font-bold select-none">
+              // RECOVERED GATEWAY KEY FRAGMENTS
+            </div>
 
             {/* Fragment inputs */}
-            <div className="space-y-3">
-              <p className="font-mono text-[11px] uppercase tracking-widest text-secondary-text/70">
-                Recovered Fragments
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {fragments.map((frag, i) => (
-                  <div key={i} className="space-y-1">
-                    <label className="font-mono text-[10px] text-secondary-text/50 uppercase tracking-widest">
-                      Fragment {i + 1}
-                    </label>
+            <div className="grid grid-cols-2 gap-3">
+              {fragments.map((frag, i) => (
+                <div key={i} className="space-y-1">
+                  <label className="text-[10px] text-[#3c663a] uppercase tracking-widest block font-bold">
+                    FRAGMENT {i + 1}
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-0 text-[#3c663a] font-bold">&gt;_</span>
                     <input
                       id={`fragment-${i + 1}`}
                       type="text"
@@ -103,35 +115,45 @@ export default function GatewayRecoveryPage() {
                       value={frag}
                       onChange={(e) => handleFragment(i, e.target.value)}
                       placeholder="________"
-                      className="w-full bg-black/40 border border-border rounded px-3 py-2 font-mono text-sm text-text placeholder:text-secondary-text/30 focus:outline-none focus:border-primary/60 transition-colors tracking-widest"
+                      className="w-full bg-transparent border-b border-[#33ff66] text-[#33ff66] font-mono text-sm outline-none caret-[#33ff66] placeholder-[#264c23] py-1 pl-7 uppercase tracking-wider"
                     />
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Combined Key Preview */}
+            <div className="space-y-1.5 pt-2">
+              <span className="text-[10px] text-[#3c663a] uppercase tracking-widest block font-bold">
+                COMBINED FRAGMENT PREVIEW
+              </span>
+              <div className="bg-[#030703] border border-[#1a2d1d] p-3 font-mono text-[#33ff66] text-xs tracking-widest min-h-[36px] select-all truncate">
+                {fragments.join("") || "[NO FRAGMENTS DETECTED]"}
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="border-t border-border" />
-
             {/* Recovery key input */}
-            <div className="space-y-2">
+            <div className="space-y-2 pt-2">
               <label
                 htmlFor="recovery-key"
-                className="font-mono text-[11px] uppercase tracking-widest text-secondary-text/70"
+                className="text-[10px] text-[#3c663a] uppercase tracking-widest block font-bold"
               >
-                Gateway Recovery Key
+                GATEWAY RECOVERY KEY
               </label>
-              <input
-                id="recovery-key"
-                type="text"
-                value={key}
-                onChange={(e) => { setKey(e.target.value); setStatus("idle"); }}
-                placeholder="______________________________"
-                className="w-full bg-black/40 border border-border rounded px-4 py-3 font-mono text-sm text-primary placeholder:text-secondary-text/30 focus:outline-none focus:border-primary transition-colors tracking-widest"
-              />
+              <div className="relative flex items-center">
+                <span className="absolute left-0 text-[#3c663a] font-bold">&gt;_</span>
+                <input
+                  id="recovery-key"
+                  type="text"
+                  value={key}
+                  onChange={(e) => { setKey(e.target.value); setStatus("idle"); }}
+                  placeholder="ENTER FULL RECOVERY KEY Signature"
+                  className="w-full bg-transparent border-b-2 border-[#33ff66] text-[#33ff66] font-mono text-sm outline-none caret-[#33ff66] placeholder-[#264c23] py-2 pl-7 uppercase tracking-widest"
+                />
+              </div>
             </div>
 
-            {/* Error / success feedback */}
+            {/* Feedback messages */}
             <AnimatePresence>
               {status === "error" && (
                 <motion.div
@@ -139,7 +161,7 @@ export default function GatewayRecoveryPage() {
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  className="flex items-center gap-2 font-mono text-xs text-danger"
+                  className="flex items-center gap-2 font-mono text-xs text-[#ff3333]"
                 >
                   <AlertTriangle size={13} />
                   {errorMsg}
@@ -150,31 +172,32 @@ export default function GatewayRecoveryPage() {
                   key="ok"
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="font-mono text-xs text-success"
+                  className="font-mono text-xs text-[#33ff66]"
                 >
                   ✓ &nbsp;Recovery Key Accepted — redirecting...
                 </motion.div>
               )}
             </AnimatePresence>
-
           </div>
 
-          {/* Submit footer */}
-          <div className="border-t border-border bg-surface/30 px-6 py-4 flex justify-end">
+          {/* Action Button */}
+          <div className="pt-3 border-t border-[#1a2d1d] flex justify-end select-none">
             {status === "loading" ? (
-              <div className="flex items-center gap-2 font-mono text-sm text-secondary-text">
-                <Loader2 size={16} className="animate-spin" />
-                Validating...
+              <div className="flex items-center gap-2 font-mono text-xs text-[#3c663a] py-2">
+                <Loader2 size={14} className="animate-spin text-[#33ff66]" />
+                VALIDATING ASSEMBLER SIGNATURE...
               </div>
             ) : (
-              <MagneticButton onClick={handleSubmit}>
-                SUBMIT
-              </MagneticButton>
+              <button
+                onClick={handleSubmit}
+                className="w-full border border-[#33ff66] text-black bg-[#33ff66] font-mono font-bold tracking-widest py-3.5 hover:shadow-[0_0_12px_rgba(51,255,102,0.6)] transition-all duration-300 uppercase cursor-pointer text-xs"
+              >
+                SUBMIT GATEWAY KEY
+              </button>
             )}
           </div>
-        </motion.div>
-
-      </div>
+        </div>
+      </BlackboxShell>
     </PageTransition>
   );
 }

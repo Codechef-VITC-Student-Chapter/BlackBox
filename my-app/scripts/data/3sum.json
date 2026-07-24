@@ -1,0 +1,49 @@
+{
+  "title": "3 Sum",
+  "slug": "3sum",
+  "description": "Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.\n\nNotice that the solution set must not contain duplicate triplets. Triplets must be sorted internally and output triplets must be lexicographically sorted. Each triplet printed on a new line. If no triplets exist, print 'No Triplets'.\n\nInput format:\nFirst line: n (size of array)\nSecond line: a1 a2 a3 ... an\n\nExample:\n6\n-1 0 1 2 -1 -4",
+  "difficulty": "Medium",
+  "limits": {
+    "cpu": 1,
+    "wall": 2,
+    "memory": 131072
+  },
+  "languages": [
+    {
+      "language_id": 54,
+      "starter_code": "#include <iostream>\n#include <vector>\n\nusing namespace std;\n\nint main() {\n    int n;\n    if (!(cin >> n)) return 0;\n    vector<int> nums(n);\n    for (int i = 0; i < n; i++) {\n        cin >> nums[i];\n    }\n    \n    // Implement your logic here\n    \n    return 0;\n}"
+    }
+  ],
+  "testcases": [
+    {
+      "input": "6\n-1 0 1 2 -1 -4",
+      "output": "-1 -1 2\n-1 0 1",
+      "hidden": false
+    },
+    {
+      "input": "3\n0 0 0",
+      "output": "0 0 0",
+      "hidden": false
+    },
+    {
+      "input": "5\n1 2 3 4 5",
+      "output": "No Triplets",
+      "hidden": false
+    },
+    {
+      "input": "1000\n[REPLACE_WITH_LARGE_RANDOM_ARRAY]",
+      "output": "[REPLACE_WITH_EXPECTED_OUTPUT]",
+      "hidden": true
+    },
+    {
+      "input": "3000\n[REPLACE_WITH_LARGE_RANDOM_ARRAY]",
+      "output": "[REPLACE_WITH_EXPECTED_OUTPUT]",
+      "hidden": true
+    },
+    {
+      "input": "5000\n[REPLACE_WITH_WORST_CASE_DUPLICATES]",
+      "output": "[REPLACE_WITH_EXPECTED_OUTPUT]",
+      "hidden": true
+    }
+  ]
+}

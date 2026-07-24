@@ -1,114 +1,64 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
-import { Terminal, Lock, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useAudio } from "@/hooks/useAudio";
+import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
+
+const BOOT_LOGS = [
+  "Connecting to Core Auth Server...",
+  "Bypassing Subnet Firewall...",
+  "Searching Engineer Identity...",
+  "██████████ 100%",
+  "ERROR: Unknown Engineer Identity",
+  "CONNECTION FAILED"
+];
+
+const STATUS_CARDS: StatusCardInfo[] = [
+  { title: "Authentication", status: "FAILED", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
+  { title: "Repository", status: "LOCKED", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
+  { title: "Network", status: "LOCKED", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
+  { title: "Visual/Puzzle", status: "LOCKED", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
+  { title: "Core Vault", status: "LOCKED", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
+];
 
 export default function AuthenticationModule() {
-  const [terminalLines, setTerminalLines] = useState<string[]>([]);
-  const { playSound } = useAudio();
-
-  useEffect(() => {
-    const sequence = [
-      "Connecting to Core Auth Server...",
-      "Bypassing Subnet Firewall...",
-      "Searching Engineer Identity...",
-      "██████████ 100%",
-      "ERROR: Unknown Engineer Identity",
-      "CONNECTION FAILED"
-    ];
-
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < sequence.length) {
-        const line = sequence[i];
-        setTerminalLines(prev => [...prev, line]);
-        playSound("typing");
-        if (line.includes("FAILED") || line.includes("ERROR")) {
-          playSound("error");
-        }
-        i++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 800);
-
-    return () => clearInterval(interval);
-  }, [playSound]);
-
   return (
     <PageTransition>
-      <div className="w-full min-h-[80vh] flex flex-col lg:flex-row gap-8">
-        
-        {/* Left Side: Terminal */}
-        <div className="flex-1 glass-panel flex flex-col overflow-hidden relative">
-          <div className="border-b border-border bg-surface/50 p-4 flex items-center gap-3">
-            <Terminal size={18} className="text-secondary-text" />
-            <span className="font-mono text-sm text-secondary-text tracking-wider">AUTH_RECOVERY.EXE</span>
-          </div>
-          
-          <div className="p-6 font-mono text-sm space-y-3 flex-1">
-            {terminalLines.map((line, idx) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className={`${line.includes('FAILED') || line.includes('ERROR') ? 'text-danger' : 'text-primary'}`}
-              >
-                {`> ${line}`}
-              </motion.div>
-            ))}
-            <motion.div
-              animate={{ opacity: [1, 0] }}
-              transition={{ repeat: Infinity, duration: 0.8 }}
-              className="w-2.5 h-4 bg-primary inline-block ml-2 align-middle"
-            />
-          </div>
-
-          <div className="p-6 border-t border-border bg-surface/30">
-            <p className="font-mono text-secondary-text text-sm">
-              Everything you need <br/>
-              is already here. <br/>
-              <span className="text-text mt-2 block">Look closer.</span>
-            </p>
-          </div>
+      <BlackboxShell
+        moduleCode="MOD-01"
+        exeName="AUTH_RECOVERY.EXE"
+        terminalLabel="VT-100 RECOVERY TERMINAL"
+        maintenanceSeal="#4092"
+        pwrLight="green"
+        errLight="red"
+        errLabel="ERR"
+        terminalHeaderExe="AUTH_RECOVERY.EXE"
+        baudRate="1200 BAUD"
+        ttyNumber="TTY-01"
+        bootLogs={BOOT_LOGS}
+        directiveTitle="CLASSIFIED DIRECTIVE // ENGINEER LOG"
+        directiveText={
+          <>
+            The machine remembers every visitor. Those who know where memories are kept will find a signed trace. Most will read it. The Engineer expected you to do something else.
+            <br /><br />
+            Everything you need is already here.
+            <br />
+            <span className="text-[#33ff66] font-bold">Look closer.</span>
+          </>
+        }
+        statusLabel="SYSTEM STATUS"
+        statusCards={STATUS_CARDS}
+        radarLabel="SCANNING"
+        radarSublabel="VECTOR DIAGNOSTIC"
+        bottomBarText="CAUTION: MANUAL OVERRIDE DISABLED"
+        bottomBarSerial="#8409-BUNKER"
+        wallStencil="CONTROL ROOM 04 // AUTH SECTOR"
+      >
+        <div className="flex-1 bg-[#030703] flex items-center justify-center pointer-events-none relative select-none">
+          <span className="font-mono text-xs uppercase tracking-[0.4em] text-[#33ff66]/10 text-center font-bold">
+            AWAITING ENGINEER IDENTITY
+          </span>
         </div>
-
-        {/* Right Side: System Status */}
-        <div className="lg:w-80 flex flex-col gap-4">
-          <h2 className="font-heading text-lg text-secondary-text uppercase tracking-widest mb-2">System Status</h2>
-          
-          <StatusCard title="Authentication" status="FAILED" icon={<XCircle size={18} />} />
-          <StatusCard title="Repository" status="LOCKED" icon={<Lock size={18} />} />
-          <StatusCard title="Network" status="LOCKED" icon={<Lock size={18} />} />
-          <StatusCard title="Memory" status="LOCKED" icon={<Lock size={18} />} />
-          <StatusCard title="Core" status="LOCKED" icon={<Lock size={18} />} />
-        </div>
-        
-      </div>
+      </BlackboxShell>
     </PageTransition>
-  );
-}
-
-function StatusCard({ title, status, icon }: { title: string, status: string, icon: React.ReactNode }) {
-  const isFailed = status === "FAILED";
-  
-  return (
-    <motion.div 
-      whileHover={{ scale: 1.02 }}
-      className={`glass-panel p-4 flex items-center justify-between border ${isFailed ? 'border-danger/30 bg-danger/5' : 'border-border'}`}
-    >
-      <div className="flex items-center gap-3">
-        <div className={`${isFailed ? 'text-danger' : 'text-secondary-text'}`}>
-          {icon}
-        </div>
-        <span className="font-mono text-sm text-text">{title}</span>
-      </div>
-      <span className={`font-mono text-xs px-2 py-1 rounded ${isFailed ? 'bg-danger/20 text-danger' : 'bg-surface text-secondary-text'}`}>
-        {status}
-      </span>
-    </motion.div>
   );
 }

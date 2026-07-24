@@ -1,155 +1,119 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Trophy, Timer } from "lucide-react";
+import { Trophy, Timer, Loader2, Award } from "lucide-react";
 import { useEffect, useState } from "react";
+import type { LeaderboardEntry } from "@/lib/scoring/ctfd";
 
 export default function LeaderboardSection() {
   const [timeLeft, setTimeLeft] = useState(45 * 60); // 45 mins
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // Timer countdown
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 0) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
     }, 1000);
 
     return () => clearInterval(timer);
   }, []);
 
+  // Fetch leaderboard data
+  useEffect(() => {
+    let isMounted = true;
+
+    async function fetchLeaderboard() {
+      try {
+        const res = await fetch("/api/leaderboard");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && Array.isArray(data.leaderboard)) {
+            setLeaderboard(data.leaderboard);
+          }
+        }
+      } catch (err) {
+        console.error("Leaderboard fetch error:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    fetchLeaderboard();
+    const interval = setInterval(fetchLeaderboard, 10000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
-  const leaderboard = [
-    {
-      rank: 1,
-      team: "404_Not_Found",
-      verdict: "Accepted",
-      penalty: 2,
-    },
-    {
-      rank: 2,
-      team: "NullPointers",
-      verdict: "Running",
-      penalty: 1,
-    },
-    {
-      rank: 3,
-      team: "StackSmashers",
-      verdict: "Wrong Answer",
-      penalty: 4,
-    },
-    {
-      rank: 4,
-      team: "SegFault",
-      verdict: "Pending",
-      penalty: 0,
-    },
-  ];
-
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 25 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4 }}
-      className="glass-panel h-full w-full flex flex-col overflow-hidden"    >
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 h-full w-full flex flex-col overflow-hidden font-sans text-zinc-50 shadow-sm backdrop-blur">
       {/* Header */}
-      <div className="border-b border-border bg-surface/50 p-4 flex items-center gap-3">
-        <Trophy size={18} className="text-secondary-text" />
-        <span className="font-mono text-sm tracking-widest text-secondary-text">
-          ENGINEER STATUS
-        </span>
+      <div className="border-b border-zinc-800 bg-zinc-950/60 p-4 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <Trophy size={16} className="text-amber-400" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
+            Leaderboard
+          </span>
+        </div>
       </div>
 
-      {/* Timer */}
-      <div className="p-6 border-b border-border">
-
-        <div className="flex items-center gap-2 mb-3">
-          <Timer size={18} className="text-primary" />
-          <span className="font-mono text-sm text-secondary-text">
-            TIME REMAINING
+      {/* Timer Card */}
+      <div className="p-5 border-b border-zinc-800 bg-zinc-900/30">
+        <div className="flex items-center gap-2 mb-1.5 text-zinc-400">
+          <Timer size={14} />
+          <span className="text-xs font-medium uppercase tracking-wider">
+            Time Remaining
           </span>
         </div>
 
-        <div className="font-heading text-4xl tracking-widest text-primary">
-          {String(minutes).padStart(2, "0")}:
-          {String(seconds).padStart(2, "0")}
+        <div className="text-3xl font-bold tracking-tight text-zinc-50">
+          {String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
         </div>
-
       </div>
 
-      {/* Leaderboard */}
+      {/* Standings List */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Award size={13} className="text-zinc-400" />
+            Standings
+          </span>
+          {loading && <Loader2 size={13} className="animate-spin text-zinc-400" />}
+        </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto p-5">
-
-        <h3 className="font-mono text-sm text-secondary-text uppercase tracking-widest mb-5">
-          Live Leaderboard
-        </h3>
-
-        <div className="space-y-4">
-
-          {leaderboard.map((team) => (
-            <motion.div
-              key={team.rank}
-              whileHover={{ scale: 1.02 }}
-              className="glass-panel p-4 border border-border"
+        {leaderboard.length === 0 && !loading ? (
+          <div className="text-center text-xs text-zinc-500 py-8">
+            No team scores recorded yet.
+          </div>
+        ) : (
+          leaderboard.map((team) => (
+            <div
+              key={team.teamId}
+              className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 flex items-center justify-between text-xs hover:bg-zinc-800/40 transition-colors"
             >
-              <div className="flex justify-between items-center mb-2">
-
-                <span className="font-heading text-primary text-lg">
-                  #{team.rank}
+              <div className="flex items-center gap-2.5">
+                <span className="font-bold text-amber-400 w-5">#{team.rank}</span>
+                <span className="text-zinc-200 font-medium truncate max-w-[120px]">
+                  {team.teamName}
                 </span>
-
-                <span className="font-mono text-xs text-secondary-text">
-                  +{team.penalty} min
-                </span>
-
               </div>
 
-              <p className="font-mono text-text mb-2">
-                {team.team}
-              </p>
-
-              <span
-                className={`text-xs px-3 py-1 rounded font-mono
-                ${
-                  team.verdict === "Accepted"
-                    ? "bg-primary/20 text-primary"
-                    : team.verdict === "Wrong Answer"
-                    ? "bg-danger/20 text-danger"
-                    : team.verdict === "Running"
-                    ? "bg-yellow-500/20 text-yellow-400"
-                    : "bg-surface text-secondary-text"
-                }`}
-              >
-                {team.verdict}
-              </span>
-            </motion.div>
-          ))}
-
-        </div>
-
+              <div className="text-right">
+                <p className="font-bold text-emerald-400">{team.score} pts</p>
+                <p className="text-[10px] text-zinc-500">
+                  {team.modulesCompleted} / 7 Solved
+                </p>
+              </div>
+            </div>
+          ))
+        )}
       </div>
-
-      {/* Footer */}
-
-      <div className="border-t border-border bg-surface/40 p-4">
-
-        <p className="font-mono text-xs text-secondary-text leading-6">
-          Rankings are based on:
-          <br />
-          • Accepted Submission
-          <br />
-          • Penalty Time
-          <br />
-          • Submission Timestamp
-        </p>
-
-      </div>
-    </motion.div>
+    </div>
   );
 }
