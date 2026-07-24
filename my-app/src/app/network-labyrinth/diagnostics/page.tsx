@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
-import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
-import { synth } from "@/utils/synthAudio";
+import { MagneticButton } from "@/components/ui/MagneticButton";
+import { Activity, ScrollText } from "lucide-react";
+import { useModuleGuard } from "@/hooks/useModuleGuard";
 
+// ─── Scan phases ────────────────────────────────────────────────────────────
 const SCAN_LINES = [
   "Initializing network probe...",
   "Establishing packet capture...",
@@ -16,79 +18,35 @@ const SCAN_LINES = [
   "Diagnostics complete.",
 ];
 
-const ENDPOINTS = [
-  "/api/network-labyrinth/status",
-  "/api/network-labyrinth/network",
-  "/api/network-labyrinth/services",
-  "/api/network-labyrinth/health",
-  "/api/network-labyrinth/internal",
-  "/api/network-labyrinth/recovery",
-];
-
-const STATUS_CARDS: StatusCardInfo[] = [
-  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
-  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
-  { title: "Network", status: "ACTIVE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
-  { title: "Visual/Puzzle", status: "LOCKED", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
-  { title: "Core Vault", status: "LOCKED", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
-];
-
-interface ResponseInfo {
-  status: number | "PENDING" | "FAILED";
-  headers?: Record<string, string>;
-  body?: string;
-}
-
 export default function DiagnosticsPage() {
+  useModuleGuard(3);
   const router = useRouter();
   const [lineIndex, setLineIndex] = useState(0);
   const [done, setDone] = useState(false);
   const [scanPct, setScanPct] = useState(0);
-  const [responses, setResponses] = useState<Record<string, ResponseInfo>>({});
 
-  const runProbes = () => {
-    synth.playClick();
-    setDone(false);
-    setLineIndex(0);
-    setScanPct(0);
-    
-    // Initialize status
-    const initialResponses: Record<string, ResponseInfo> = {};
-    ENDPOINTS.forEach(url => {
-      initialResponses[url] = { status: "PENDING" };
-    });
-    setResponses(initialResponses);
+  // ── Fire the 6 background API calls so they appear in DevTools ────────────
+  useEffect(() => {
+    const endpoints = [
+      "/api/network-labyrinth/status",
+      "/api/network-labyrinth/network",
+      "/api/network-labyrinth/services",
+      "/api/network-labyrinth/health",
+      "/api/network-labyrinth/internal",   // ← returns 403 with fragment in header
+      "/api/network-labyrinth/recovery",
+    ];
 
-    // Staggered fetches
-    ENDPOINTS.forEach((url, i) => {
-      setTimeout(async () => {
-        try {
-          const res = await fetch(url);
-          const text = await res.text();
-          const headers: Record<string, string> = {};
-          res.headers.forEach((val, key) => {
-            headers[key] = val;
-          });
-
-          setResponses(prev => ({
-            ...prev,
-            [url]: { status: res.status, headers, body: text.slice(0, 120) }
-          }));
-
-          if (res.status === 200) synth.playSuccess();
-          else if (res.status === 403) synth.playError();
-          else synth.playClick();
-        } catch {
-          setResponses(prev => ({
-            ...prev,
-            [url]: { status: "FAILED" }
-          }));
-          synth.playError();
-        }
+    // Stagger requests slightly so timestamps differ — participants
+    // correlate these timings with Activity Logs on the next page.
+    endpoints.forEach((url, i) => {
+      setTimeout(() => {
+        fetch(url).catch(() => {/* silent – 403 expected */});
       }, i * 420);
     });
+  }, []);
 
-    // Animate scanning progress logs
+  // ── Animate scan text & progress bar ─────────────────────────────────────
+  useEffect(() => {
     let idx = 0;
     const interval = setInterval(() => {
       idx++;
@@ -99,129 +57,140 @@ export default function DiagnosticsPage() {
         setTimeout(() => setDone(true), 600);
       }
     }, 900);
-  };
-
-  // Run probes on mount
-  useEffect(() => {
-    runProbes();
+    return () => clearInterval(interval);
   }, []);
 
   return (
     <PageTransition>
-      <BlackboxShell
-        moduleCode="MOD-03"
-        exeName="GATEWAY_PROBE.EXE"
-        terminalLabel="NETWORK DIAGNOSTIC ENGINE"
-        maintenanceSeal="#4093"
-        pwrLight="green"
-        errLight="red"
-        errLabel="ERR"
-        terminalHeaderExe="diagnostics_sweep.log"
-        baudRate="1200 BAUD"
-        ttyNumber="TTY-03"
-        directiveTitle="CLASSIFIED DIRECTIVE // DIAGNOSTICS"
-        directiveText={
-          <>
-            Gateway probes sweep the available endpoints for signals.
-            <br />
-            Inspect response headers and status codes via network logs.
-          </>
-        }
-        statusLabel="SYSTEM STATUS"
-        statusCards={STATUS_CARDS}
-        radarLabel="PROBING"
-        radarSublabel="GATEWAY SWEEP"
-        bottomBarText="CAUTION: NETWORK TRAFFIC MONITORED"
-        bottomBarSerial="#8409-DIAG"
-        wallStencil="CONTROL ROOM 04 // GATEWAY SECTOR"
-      >
-        {/* Probe Logs Terminal output */}
-        <div className="max-h-36 overflow-y-auto mb-4 border-b border-[#122414] pb-4 flex-shrink-0 space-y-1 text-xs">
-          {SCAN_LINES.slice(0, lineIndex + 1).map((line, i) => (
-            <p key={i} className="text-[#3c663a]">
-              &gt; <span className={i === lineIndex && !done ? "text-[#33ff66]" : ""}>{line}</span>
-            </p>
-          ))}
-        </div>
+      <div className="flex flex-col items-center justify-center min-h-[80vh] w-full max-w-lg mx-auto space-y-6">
 
-        {/* Diagnostic Response cards grid */}
-        <div className="flex-1 overflow-y-auto flex flex-col justify-between space-y-4">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-[10px] text-[#264c23] uppercase tracking-widest border-b border-[#112211] pb-1">
-              <span>// API RESULT RACKS</span>
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center space-y-1"
+        >
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-primary">
+            Diagnostics Running...
+          </p>
+          <h1 className="font-heading text-3xl font-bold text-text">
+            NETWORK SCAN
+          </h1>
+        </motion.div>
+
+        {/* Scan panel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="glass-panel w-full overflow-hidden"
+        >
+          {/* Panel header */}
+          <div className="flex items-center gap-3 border-b border-border bg-surface/40 px-5 py-3">
+            <Activity size={16} className="text-primary" />
+            <span className="font-mono text-xs tracking-widest text-secondary-text uppercase">
+              Traffic Analysis
+            </span>
+            {!done && (
+              <motion.span
+                animate={{ opacity: [1, 0.3] }}
+                transition={{ repeat: Infinity, duration: 0.7, ease: "easeInOut" }}
+                className="ml-auto font-mono text-[10px] text-warning tracking-widest"
+              >
+                SCANNING
+              </motion.span>
+            )}
+            {done && (
+              <span className="ml-auto font-mono text-[10px] text-success tracking-widest">
+                COMPLETE
+              </span>
+            )}
+          </div>
+
+          {/* Scrolling scan log */}
+          <div className="px-5 py-4 space-y-2 min-h-[160px]">
+            {SCAN_LINES.slice(0, lineIndex + 1).map((line, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3 font-mono text-sm"
+              >
+                <span className="text-primary/50">&gt;</span>
+                <span className={i === lineIndex && !done ? "text-primary" : "text-secondary-text"}>
+                  {line}
+                </span>
+                {i === lineIndex && !done && (
+                  <motion.span
+                    animate={{ opacity: [1, 0] }}
+                    transition={{ repeat: Infinity, duration: 0.7 }}
+                    className="inline-block w-1.5 h-3.5 bg-primary"
+                  />
+                )}
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Progress bar */}
+          <div className="px-5 pb-4">
+            <div className="flex justify-between font-mono text-[10px] text-secondary-text mb-1.5">
+              <span>Progress</span>
               <span>{scanPct}%</span>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {ENDPOINTS.map((url) => {
-                const info = responses[url] || { status: "PENDING" };
-                const isPending = info.status === "PENDING";
-                const isFailed = info.status === "FAILED";
-                const is200 = info.status === 200;
-                const is403 = info.status === 403;
-
-                return (
-                  <div key={url} className="bg-[#040e04] border border-[#1a2d1d] rounded-md p-3 font-mono text-[10px] flex flex-col justify-between gap-1.5">
-                    <div className="flex justify-between items-center border-b border-white/5 pb-1">
-                      <span className="text-[#33ff66] font-bold truncate max-w-[150px]">{url.replace("/api/network-labyrinth/", "")}</span>
-                      <span className={`px-1.5 py-0.5 border text-[8px] uppercase tracking-widest ${
-                        is200 ? "border-[#33ff66] text-[#33ff66] bg-[#0c1e0b]" :
-                        is403 ? "border-[#ff3333] text-[#ff3333] bg-[#3a0c0e]" :
-                        isPending ? "border-[#f59e0b] text-[#f59e0b] bg-[#1a1408] animate-pulse" :
-                        "border-[#ff3333] text-[#ff3333]"
-                      }`}>
-                        {info.status}
-                      </span>
-                    </div>
-
-                    {!isPending && !isFailed && info.headers && (
-                      <div className="text-[9px] space-y-0.5">
-                        {info.headers["x-node-id"] && (
-                          <div className="text-[#f59e0b] truncate">X-Node-Id: {info.headers["x-node-id"]}</div>
-                        )}
-                        {info.headers["x-restricted-fragment"] && (
-                          <div className="text-[#f59e0b] truncate">X-Restricted-Fragment: {info.headers["x-restricted-fragment"]}</div>
-                        )}
-                        {info.body && (
-                          <div className="text-[#33ff66] truncate">Body: {info.body}</div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="w-full h-1 bg-surface rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-primary rounded-full"
+                animate={{ width: `${scanPct}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
             </div>
           </div>
 
-          <div className="space-y-3 pt-3 border-t border-[#1a2d1d]">
-            <div className="flex flex-col sm:flex-row gap-3 w-full">
-              <button
-                onClick={runProbes}
-                disabled={!done}
-                className="flex-1 border border-[#33ff66] text-[#33ff66] bg-transparent hover:bg-[#33ff66] hover:text-black transition-all duration-300 font-mono tracking-widest py-2.5 text-xs font-bold uppercase cursor-pointer text-center"
+          {/* Hint — shown only after scan completes */}
+          <AnimatePresence>
+            {done && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                transition={{ duration: 0.5 }}
+                className="border-t border-border bg-warning/5 px-5 py-4"
               >
-                TRIGGER PROBES
+                <p className="font-mono text-xs text-warning/80 leading-6">
+                  ⚠ &nbsp;Traffic analysis finished. Certain requests require closer inspection.
+                  <br />
+                  <span className="text-secondary-text">
+                    The answers are in transit — not on the screen.
+                  </span>
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Action buttons — only after scan */}
+        <AnimatePresence>
+          {done && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex flex-col sm:flex-row gap-4 w-full justify-center"
+            >
+              <button
+                onClick={() => router.push("/network-labyrinth/logs")}
+                className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-border bg-surface/60 font-mono text-sm text-secondary-text hover:border-primary hover:text-text transition-all"
+              >
+                <ScrollText size={16} />
+                OPEN ACTIVITY LOGS
               </button>
-              {done && (
-                <>
-                  <button
-                    onClick={() => router.push("/network-labyrinth/logs")}
-                    className="flex-1 border border-[#1a2d1d] text-[#3c663a] bg-transparent hover:border-[#33ff66] hover:text-[#33ff66] transition-all duration-300 font-mono tracking-widest py-2.5 text-xs font-bold uppercase cursor-pointer text-center"
-                  >
-                    OPEN ACTIVITY LOGS
-                  </button>
-                  <button
-                    onClick={() => router.push("/network-labyrinth/submit-key")}
-                    className="flex-1 border border-[#33ff66] text-black bg-[#33ff66] hover:shadow-[0_0_12px_rgba(51,255,102,0.6)] transition-all duration-300 font-mono tracking-widest py-2.5 text-xs font-bold uppercase cursor-pointer text-center animate-pulse"
-                  >
-                    SUBMIT RECOVERY KEY
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </BlackboxShell>
+              <MagneticButton onClick={() => router.push("/network-labyrinth/submit-key")}>
+                SUBMIT RECOVERY KEY
+              </MagneticButton>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+      </div>
     </PageTransition>
   );
 }

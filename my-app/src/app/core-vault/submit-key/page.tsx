@@ -1,145 +1,180 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
-import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
-import { synth } from "@/utils/synthAudio";
-
-const BOOT_LOGS = [
-  "CORE_RECOVERY.EXE",
-  "Loading...",
-  "██████████ 100%",
-  "SYSTEM REPORT",
-  "Recovery Records Found.",
-  "Integrity Check : FAILED",
-  "",
-  "You already solved it.",
-  "You just don't know it yet.",
-  "The Core accepts only those",
-  "who remember."
-];
-
-const STATUS_CARDS: StatusCardInfo[] = [
-  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
-  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
-  { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
-  { title: "Visual/Puzzle", status: "COMPLETE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
-  { title: "Core Vault", status: "ACTIVE", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
-];
+import { Terminal, CheckCircle2, Lock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAudio } from "@/hooks/useAudio";
+import { useRouter } from "next/navigation";
 
 export default function CoreRecoveryPage() {
-  const router = useRouter();
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [masterKey, setMasterKey] = useState("");
+  const { playSound } = useAudio();
+  const router = useRouter();
 
   useEffect(() => {
+    const sequence = [
+      "CORE_RECOVERY.EXE",
+      "Loading...",
+      "██████████ 100%",
+      "SYSTEM REPORT",
+      "Recovery Records Found.",
+      "Integrity Check : FAILED",
+      "",
+      "You already solved it.",
+      "You just don't know it yet.",
+      "The Core accepts only those",
+      "who remember."
+    ];
+
     let i = 0;
+
     const interval = setInterval(() => {
-      if (i < BOOT_LOGS.length) {
-        setTerminalLines((prev) => [...prev, BOOT_LOGS[i]]);
-        synth.playClick();
+      if (i < sequence.length) {
+        setTerminalLines((prev) => [...prev, sequence[i]]);
+        playSound("typing");
         i++;
       } else {
         clearInterval(interval);
       }
-    }, 600);
+    }, 700);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [playSound]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    synth.playClick();
-    synth.playSuccess();
+  const handleSubmit = () => {
+    playSound("typing");
+
+    // Backend validation later
     router.push("/core-vault/success");
   };
 
   return (
     <PageTransition>
-      <BlackboxShell
-        moduleCode="MOD-05"
-        exeName="CORE_RECOVERY.EXE"
-        terminalLabel="MASTER RECOVERY SEQUENCE"
-        maintenanceSeal="#4095"
-        pwrLight="green"
-        errLight="red"
-        errLabel="ERR"
-        terminalHeaderExe="core_reconstruction.log"
-        baudRate="1200 BAUD"
-        ttyNumber="TTY-05"
-        directiveTitle="CLASSIFIED DIRECTIVE // MASTER RECOVERY"
-        directiveText={
-          <>
-            The master security recovery signature overrides low-level locks.
-            <br />
-            Enter the exact encrypted key token to authorize core reboot.
-          </>
-        }
-        statusLabel="SYSTEM STATUS"
-        statusCards={STATUS_CARDS}
-        radarLabel="SECURING"
-        radarSublabel="VAULT SECURITY GATE"
-        bottomBarText="CAUTION: CORE ACCESS LEVEL 5 REQUIRED"
-        bottomBarSerial="#8409-COREKEY"
-        wallStencil="CONTROL ROOM 04 // CORE SECTOR"
-      >
-        {/* Terminal output */}
-        <div className="max-h-36 overflow-y-auto mb-4 border-b border-[#122414] pb-4 flex-shrink-0 space-y-1 text-xs">
-          {terminalLines.map((line, index) => (
-            <p
-              key={index}
-              className={`text-xs ${
-                line.includes("FAILED") ? "text-[#ff3333] font-bold" :
-                line === "SYSTEM REPORT" ? "text-[#33ff66] font-bold" :
-                line === "" ? "h-2" : "text-[#3c663a]"
-              }`}
-            >
-              {line !== "" && `> ${line}`}
-            </p>
-          ))}
-          {terminalLines.length < BOOT_LOGS.length && (
-            <span className="inline-block w-1.5 h-3 bg-[#33ff66]/70 ml-1 animate-pulse" />
-          )}
-        </div>
+      <div className="w-full min-h-[80vh] flex flex-col lg:flex-row gap-8">
 
-        {/* Form area */}
-        <div className="flex-1 overflow-y-auto flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="text-[10px] text-[#3c663a] uppercase tracking-widest border-b border-[#112211] pb-1.5 mb-2 font-bold select-none">
-              // INPUT OVERRIDE CREDENTIALS
-            </div>
+        {/* Left Terminal */}
 
-            <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
-              <div className="space-y-2">
-                <label htmlFor="master-key-input" className="text-[10px] text-[#3c663a] uppercase tracking-widest block font-bold">
-                  MASTER RECOVERY SIGNATURE KEY
-                </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-0 text-[#3c663a] font-bold">&gt;_</span>
-                  <input
-                    id="master-key-input"
-                    type="text"
-                    value={masterKey}
-                    onChange={(e) => setMasterKey(e.target.value)}
-                    placeholder="ENTER RECOVERY TOKEN..."
-                    className="w-full bg-transparent border-b-2 border-[#33ff66] text-[#33ff66] font-mono text-lg outline-none caret-[#33ff66] placeholder-[#264c23] py-2 pl-7 uppercase tracking-wider"
-                    required
-                  />
-                </div>
-              </div>
+        <div className="flex-1 glass-panel flex flex-col overflow-hidden">
+
+          <div className="border-b border-border bg-surface/50 p-4 flex items-center gap-3">
+            <Terminal size={18} className="text-secondary-text" />
+            <span className="font-mono text-sm tracking-wider text-secondary-text">
+              CORE_RECOVERY.EXE
+            </span>
+          </div>
+
+          <div className="flex-1 p-6 space-y-3 font-mono text-sm">
+
+            {terminalLines.map((line, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`
+                  ${line?.includes("FAILED") ? "text-danger" : ""}
+                  ${line === "SYSTEM REPORT" ? "text-primary font-bold" : ""}
+                  ${line?.includes("remember") ? "text-primary" : ""}
+                  ${line === "" ? "h-3" : ""}
+                `}
+              >
+                {line !== "" && `> ${line}`}
+              </motion.div>
+            ))}
+
+            <motion.div
+              animate={{ opacity: [1, 0] }}
+              transition={{ repeat: Infinity, duration: 0.8 }}
+              className="inline-block ml-2 w-2.5 h-4 bg-primary"
+            />
+
+            <div className="pt-8 space-y-4">
+
+              <p className="font-mono text-secondary-text">
+                Master Recovery Key
+              </p>
+
+              <input
+                value={masterKey}
+                onChange={(e) => setMasterKey(e.target.value)}
+                placeholder="Enter Recovery Key..."
+                className="w-full bg-transparent border border-border px-4 py-3 font-mono text-text outline-none focus:border-primary"
+              />
 
               <button
-                type="submit"
-                className="w-full border border-[#33ff66] text-black bg-[#33ff66] font-mono font-bold tracking-widest py-3.5 hover:shadow-[0_0_12px_rgba(51,255,102,0.6)] transition-all duration-300 uppercase cursor-pointer text-xs"
+                onClick={handleSubmit}
+                className="w-full border border-primary text-primary py-3 font-mono hover:bg-primary hover:text-background transition-all duration-300"
               >
-                SUBMIT MASTER KEY
+                Submit
               </button>
-            </form>
+
+            </div>
+
           </div>
+
         </div>
-      </BlackboxShell>
+
+        {/* Right Panel */}
+
+        <div className="lg:w-80 flex flex-col gap-4">
+
+          <h2 className="font-heading text-lg uppercase tracking-widest text-secondary-text">
+            Recovery Status
+          </h2>
+
+          <StatusCard title="Authentication" status="RECOVERED" />
+          <StatusCard title="Repository" status="RECOVERED" />
+          <StatusCard title="Gateway" status="RECOVERED" />
+          <StatusCard title="Puzzle" status="RECOVERED" />
+          <StatusCard title="Core" status="AWAITING" locked />
+
+        </div>
+
+      </div>
     </PageTransition>
+  );
+}
+
+function StatusCard({
+  title,
+  status,
+  locked = false,
+}: {
+  title: string;
+  status: string;
+  locked?: boolean;
+}) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className={`glass-panel p-4 flex justify-between items-center border ${
+        locked
+          ? "border-border"
+          : "border-primary/30 bg-primary/5"
+      }`}
+    >
+      <div className="flex items-center gap-3">
+        {locked ? (
+          <Lock size={18} className="text-secondary-text" />
+        ) : (
+          <CheckCircle2 size={18} className="text-primary" />
+        )}
+
+        <span className="font-mono text-sm text-text">
+          {title}
+        </span>
+      </div>
+
+      <span
+        className={`font-mono text-xs px-2 py-1 rounded ${
+          locked
+            ? "bg-surface text-secondary-text"
+            : "bg-primary/20 text-primary"
+        }`}
+      >
+        {status}
+      </span>
+    </motion.div>
   );
 }

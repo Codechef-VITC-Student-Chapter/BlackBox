@@ -1,149 +1,355 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
-import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
-import { synth } from "@/utils/synthAudio";
+import { useRouter } from "next/navigation";
 
-const LOADING_STEPS = [
+const loadingSteps = [
   "Preparing Judge...",
   "Loading Compiler...",
   "Generating Test Cases...",
   "System Ready.",
 ];
 
-const STATUS_CARDS: StatusCardInfo[] = [
-  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
-  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
-  { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
-  { title: "Visual/Puzzle", status: "COMPLETE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
-  { title: "Core Vault", status: "COMPLETE", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
-  { title: "Certification", status: "COMPLETE", modId: "MOD-06", serial: "SN:84-E6", iconType: "cert" },
-  { title: "Final Authorization", status: "COMPLETE", modId: "MOD-07", serial: "SN:84-F7", iconType: "final" },
-];
 
 export default function SuccessPage() {
+
   const router = useRouter();
+
   const [step, setStep] = useState(0);
   const [showTitle, setShowTitle] = useState(false);
 
+
+
   useEffect(() => {
-    synth.playSuccessFanfare();
 
     const titleTimer = setTimeout(() => {
       setShowTitle(true);
     }, 2500);
 
+
+
     const interval = setInterval(() => {
-      setStep((prev) => {
-        if (prev < LOADING_STEPS.length - 1) {
-          synth.playClick();
+
+      setStep((prev)=>{
+
+        if(prev < loadingSteps.length - 1){
           return prev + 1;
         }
+
         clearInterval(interval);
+
         return prev;
+
       });
-    }, 1000);
 
-    const navigateTimer = setTimeout(() => {
-      synth.playSuccess();
-      router.push("/engineer-certification");
-    }, 7500);
 
-    return () => {
+    },1000);
+
+
+
+    const navigateTimer = setTimeout(()=>{
+
+      router.push(
+        "/engineer-certification"
+      );
+
+    },7500);
+
+
+
+    return ()=>{
+
       clearTimeout(titleTimer);
       clearTimeout(navigateTimer);
       clearInterval(interval);
+
     };
-  }, [router]);
+
+
+  },[router]);
+
+
 
   return (
+
     <PageTransition>
-      <BlackboxShell
-        moduleCode="MOD-07"
-        exeName="GATEWAY_COMPLETE.EXE"
-        terminalLabel="AUTH COMPLETE"
-        maintenanceSeal="#4097"
-        pwrLight="green"
-        errLight="red"
-        errLabel="ERR"
-        terminalHeaderExe="success_transmission.log"
-        baudRate="9600 BAUD"
-        ttyNumber="TTY-07"
-        directiveTitle="CLASSIFIED DIRECTIVE // VERDICT COMPLETED"
-        directiveText={
-          <>
-            All security firewalls have been cleared.
-            <br />
-            Redirecting to engineer certification logs.
-          </>
-        }
-        statusLabel="SYSTEM STATUS"
-        statusCards={STATUS_CARDS}
-        radarLabel="SECURED"
-        radarSublabel="GATEWAY COMPLETE"
-        bottomBarText="GATEWAY ACCESS GRANTED PERMANENTLY"
-        bottomBarSerial="#8409-FINAL-OK"
-        wallStencil="CONTROL ROOM 04 // GATEWAY CENTER"
-        compactStatus={true}
+
+
+      <motion.div
+
+        initial={{
+          opacity:0
+        }}
+
+        animate={{
+          opacity:1
+        }}
+
+        transition={{
+          duration:1
+        }}
+
+        className="
+        min-h-[90vh]
+        w-full
+        bg-black
+        flex
+        items-center
+        justify-center
+        overflow-hidden
+        relative
+        "
+
       >
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-between space-y-4 text-center font-mono">
-          
-          <style dangerouslySetInnerHTML={{__html: `
-            @keyframes finalGlitch {
-              0%, 100% { opacity: 0.05; transform: none; }
-              50% { opacity: 0.15; transform: skewX(-5deg); }
-            }
-            .final-glitch-overlay {
-              animation: finalGlitch 1.5s ease-in-out infinite;
-            }
-          `}} />
 
-          {/* Glitch Overlay */}
-          <div className="final-glitch-overlay absolute inset-0 bg-[#33ff66]/5 pointer-events-none z-0" />
 
-          <div className="space-y-2 select-none relative z-10">
-            <p className="text-[#33ff66] font-bold text-sm tracking-widest uppercase">
-              FINAL BARRIER DESTROYED
-            </p>
-            <p className="text-white text-xs tracking-wider">
-              SECURE CHANNEL ESTABLISHED
-            </p>
-          </div>
 
-          <div className="flex-1 flex flex-col justify-center items-center relative z-10 my-4 min-h-[140px]">
-            {showTitle && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="space-y-4"
+        {/* Glitch Overlay */}
+
+
+        <motion.div
+
+          animate={{
+            opacity:[
+              0,
+              1,
+              0,
+              1,
+              0
+            ],
+
+            x:[
+              0,
+              -10,
+              10,
+              -5,
+              0
+            ]
+
+          }}
+
+          transition={{
+            duration:1.5,
+            repeat:2
+          }}
+
+          className="
+          absolute
+          inset-0
+          bg-primary/5
+          pointer-events-none
+          "
+
+        />
+
+
+
+
+
+        <div className="
+        text-center
+        font-mono
+        space-y-8
+        ">
+
+
+
+          <motion.p
+
+            initial={{
+              opacity:0
+            }}
+
+            animate={{
+              opacity:1
+            }}
+
+            className="
+            text-primary
+            tracking-widest
+            text-xl
+            "
+
+          >
+
+            FINAL BARRIER DESTROYED
+
+          </motion.p>
+
+
+
+
+          <motion.p
+
+            initial={{
+              opacity:0
+            }}
+
+            animate={{
+              opacity:1
+            }}
+
+            transition={{
+              delay:1
+            }}
+
+            className="
+            text-white
+            tracking-widest
+            "
+
+          >
+
+            SECURE CHANNEL ESTABLISHED
+
+          </motion.p>
+
+
+
+
+
+
+          {
+            showTitle && (
+
+              <motion.h1
+
+                initial={{
+                  opacity:0,
+                  scale:0.8
+                }}
+
+                animate={{
+                  opacity:1,
+                  scale:1
+                }}
+
+                className="
+                text-5xl
+                md:text-7xl
+                font-bold
+                tracking-widest
+                text-primary
+                "
+
               >
-                <h1 className="text-2xl font-bold tracking-widest text-[#33ff66] uppercase drop-shadow-[0_0_8px_#33ff66]">
-                  ENGINEER
-                  <br />
-                  CERTIFICATION
-                </h1>
 
-                <div className="bg-[#030703] border border-[#1a2d1d] rounded p-4 text-left max-w-xs mx-auto text-[10px] space-y-1 text-[#3c663a] font-bold">
-                  {LOADING_STEPS.slice(0, step + 1).map((item, idx) => (
-                    <p key={idx}>
-                      &gt; {item}
-                    </p>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </div>
+                ENGINEER
+                <br/>
+                CERTIFICATION
 
-          {step === LOADING_STEPS.length - 1 && (
-            <div className="text-[#33ff66] font-bold animate-pulse text-xs relative z-10 py-2">
-              // REDIRECTING ENGINE READY
-            </div>
-          )}
+              </motion.h1>
+
+            )
+          }
+
+
+
+
+
+          {
+            showTitle && (
+
+            <motion.div
+
+              initial={{
+                opacity:0
+              }}
+
+              animate={{
+                opacity:1
+              }}
+
+              transition={{
+                delay:.5
+              }}
+
+              className="
+              text-secondary-text
+              text-lg
+              space-y-4
+              "
+
+            >
+
+              {
+                loadingSteps
+                .slice(0,step+1)
+                .map((item,index)=>(
+
+                  <motion.p
+
+                    key={index}
+
+                    initial={{
+                      opacity:0,
+                      x:-20
+                    }}
+
+                    animate={{
+                      opacity:1,
+                      x:0
+                    }}
+
+                  >
+
+                    {">"} {item}
+
+                  </motion.p>
+
+                ))
+              }
+
+
+            </motion.div>
+
+            )
+          }
+
+
+
+
+          {
+            step === loadingSteps.length-1 && (
+
+              <motion.p
+
+                animate={{
+                  opacity:[1,0.5,1]
+                }}
+
+                transition={{
+                  repeat:Infinity,
+                  duration:1
+                }}
+
+                className="
+                text-primary
+                pt-6
+                "
+
+              >
+
+                SYSTEM READY
+
+              </motion.p>
+
+            )
+          }
+
+
+
         </div>
-      </BlackboxShell>
+
+
+
+      </motion.div>
+
+
     </PageTransition>
+
   );
+
 }

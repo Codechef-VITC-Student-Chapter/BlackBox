@@ -1,127 +1,246 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { PageTransition } from "@/components/ui/PageTransition";
-import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
-import { synth } from "@/utils/synthAudio";
+import { Terminal, ShieldCheck, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
 
-const MODES = ["SAFE", "SEMI", "AUTO"];
-
-const STATUS_CARDS: StatusCardInfo[] = [
-  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
-  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
-  { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
-  { title: "Visual/Puzzle", status: "COMPLETE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
-  { title: "Core Vault", status: "COMPLETE", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
-  { title: "Certification", status: "COMPLETE", modId: "MOD-06", serial: "SN:84-E6", iconType: "cert" },
-  { title: "Final Authorization", status: "ACTIVE", modId: "MOD-07", serial: "SN:84-F7", iconType: "final" },
-];
+const modes = ["SAFE", "SEMI", "AUTO"];
 
 export default function WeaponSystemPage() {
-  const router = useRouter();
-  const [modeIndex, setModeIndex] = useState(0);
-  const [activated, setActivated] = useState(false);
+    const router = useRouter();
 
-  function handleModeChange() {
-    synth.playClick();
-    if (activated) return;
+    const [modeIndex, setModeIndex] = useState(0);
+    const [activated, setActivated] = useState(false);
 
-    if (modeIndex < MODES.length - 1) {
-      setModeIndex(modeIndex + 1);
-    } else {
-      setActivated(true);
-      synth.playError();
-    }
-  }
+    function handleModeChange() {
+        if (activated) return;
 
-  return (
-    <PageTransition>
-      <BlackboxShell
-        moduleCode="MOD-07"
-        exeName="WEAPON_SYSTEM.EXE"
-        terminalLabel="VT-100 WEAPON SYSTEM DIAGNOSTIC"
-        maintenanceSeal="#4097"
-        pwrLight="green"
-        errLight="red"
-        errLabel="ERR"
-        terminalHeaderExe="weapon_controller.log"
-        baudRate="9600 BAUD"
-        ttyNumber="TTY-07"
-        directiveTitle="CLASSIFIED DIRECTIVE // WEAPON INTERACTION"
-        directiveText={
-          <>
-            Configure weapon safety modes to test target relays.
-            <br />
-            Ensure credentials authorization signature is applied.
-          </>
+        if (modeIndex < modes.length - 1) {
+            setModeIndex(modeIndex + 1);
+        } else {
+            setActivated(true);
         }
-        statusLabel="SYSTEM STATUS"
-        statusCards={STATUS_CARDS}
-        radarLabel="LOCKED"
-        radarSublabel="WEAPON RELAY CONTROLLER"
-        bottomBarText="CAUTION: WEAPON CONTROLLER SECURED"
-        bottomBarSerial="#8409-WEAPON"
-        wallStencil="CONTROL ROOM 04 // GATEWAY CENTER"
-        compactStatus={true}
-      >
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-between space-y-4">
-          <div className="space-y-4">
-            <div className="text-[10px] text-[#264c23] uppercase tracking-widest border-b border-[#112211] pb-1.5 mb-2 font-bold select-none">
-              // WEAPON CONFIGURATION SELECTOR
+    }
+
+    return (
+        <PageTransition>
+            <div className="w-full min-h-[80vh] flex flex-col lg:flex-row gap-8">
+
+                {/* LEFT */}
+
+                <div className="flex-1 glass-panel flex flex-col overflow-hidden">
+
+                    <div className="border-b border-border bg-surface/50 p-4 flex items-center gap-3">
+                        <Terminal size={18} className="text-secondary-text" />
+
+                        <span className="font-mono text-sm tracking-widest text-secondary-text">
+                            WEAPON_SYSTEM.EXE
+                        </span>
+                    </div>
+
+                    <div className="flex-1 p-8 font-mono">
+
+                        <h1 className="text-3xl text-primary font-bold tracking-widest mb-8">
+                            WEAPON STATUS
+                        </h1>
+
+                        <div className="space-y-3 text-sm">
+
+                            <p>
+                                MODEL :
+                                <span className="text-primary ml-2">
+                                    AK47
+                                </span>
+                            </p>
+
+                            <p>
+                                STATE :
+                                <span
+                                    className={`ml-2 ${activated
+                                            ? "text-primary"
+                                            : "text-danger"
+                                        }`}
+                                >
+                                    {activated ? "ONLINE" : "DISABLED"}
+                                </span>
+                            </p>
+
+                            <p>
+                                RECOVERY MODE :
+                                <span className="text-primary ml-2">
+                                    ACTIVE
+                                </span>
+                            </p>
+
+                        </div>
+
+                        {/* Gun */}
+
+                        <div className="flex justify-center my-14">
+
+                            <motion.img
+                                src="/images/ak47.png"
+                                alt="AK47"
+                                className={`w-[430px] transition-all duration-500 ${activated
+                                        ? ""
+                                        : "opacity-40 grayscale"
+                                    }`}
+                                animate={{
+                                    scale: activated ? 1.03 : 1,
+                                }}
+                            />
+
+                        </div>
+
+                        {/* Safety */}
+
+                        <div className="flex flex-col items-center gap-6">
+
+                            <p className="text-secondary-text tracking-widest">
+                                SAFETY SELECTOR
+                            </p>
+
+                            <motion.button
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleModeChange}
+                                className={`border px-10 py-3 font-bold tracking-widest transition-all ${activated
+                                        ? "border-primary text-primary"
+                                        : "border-border text-white hover:border-primary"
+                                    }`}
+                            >
+                                {activated
+                                    ? "WEAPON ONLINE"
+                                    : `MODE : ${modes[modeIndex]}`}
+                            </motion.button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {/* RIGHT */}
+
+                <div className="lg:w-80 flex flex-col gap-4">
+
+                    <h2 className="font-heading text-lg uppercase tracking-widest text-secondary-text">
+                        Weapon Diagnostics
+                    </h2>
+
+                    <StatusCard
+                        title="Recovery Mode"
+                        status="ACTIVE"
+                        success
+                    />
+
+                    <StatusCard
+                        title="Power"
+                        status="ONLINE"
+                        success
+                    />
+
+                    <StatusCard
+                        title="Safety"
+                        status={activated ? "OFF" : modes[modeIndex]}
+                    />
+
+                    <StatusCard
+                        title="Authorization"
+                        status={activated ? "FAILED" : "WAITING"}
+                    />
+
+                </div>
+
             </div>
 
-            <div className="space-y-2 font-mono text-xs text-[#3c663a]">
-              <p>MODEL : <span className="text-[#33ff66] font-bold">AK47</span></p>
-              <p>RECOVERY MODE : <span className="text-[#33ff66] font-bold">ACTIVE</span></p>
-              <p>STATE : <span className={`font-bold ${activated ? "text-[#33ff66]" : "text-[#ff3333]"}`}>{activated ? "ONLINE" : "DISABLED"}</span></p>
-            </div>
+            {/* Bottom Terminal */}
 
-            {/* AK47 Image */}
-            <div className="flex justify-center items-center py-4 select-none">
-              <motion.img
-                src="/images/ak47.png"
-                alt="AK47"
-                className={`w-64 object-contain transition-all duration-500 ${activated ? "" : "opacity-30 grayscale"}`}
-                animate={{ scale: activated ? 1.04 : 1 }}
-              />
-            </div>
-
-            {/* Selector */}
-            <div className="flex flex-col items-center gap-2 select-none">
-              <span className="text-[9px] text-[#3c663a] uppercase font-bold tracking-widest">SAFETY SELECTOR</span>
-              <button
-                onClick={handleModeChange}
-                className="w-full border border-[#33ff66] text-black bg-[#33ff66] hover:shadow-[0_0_12px_rgba(51,255,102,0.6)] py-3 font-mono font-bold tracking-widest uppercase cursor-pointer text-xs"
-              >
-                {activated ? "WEAPON ONLINE" : `MODE : ${MODES[modeIndex]}`}
-              </button>
-            </div>
-
-            {/* Logs on activated */}
             {activated && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-[#170809]/90 border border-[#ff3333]/30 p-3 font-mono text-[10px] text-[#ff3333] space-y-2"
-              >
-                <p className="font-bold">// AUTHENTICATION REJECTED</p>
-                <p>Weapon system online but locked by high-level authority gateway check. Recovery key authorization required.</p>
-                <button
-                  onClick={() => {
-                    synth.playClick();
-                    router.push("/final-authorization/authorization");
-                  }}
-                  className="mt-1 border border-[#ff3333] text-[#ff3333] bg-transparent hover:bg-[#ff3333] hover:text-black font-mono text-xs font-bold py-1.5 px-3 uppercase transition-all duration-200 cursor-pointer"
+
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="glass-panel mt-8 p-6 font-mono space-y-3"
                 >
-                  ENTER RECOVERY KEY
-                </button>
-              </motion.div>
+
+                    <p className="text-primary">
+                        WEAPON ONLINE
+                    </p>
+
+                    <p className="text-danger">
+                        AUTHENTICATION FAILED
+                    </p>
+
+                    <p className="text-secondary-text">
+                        RECOVERY KEY REQUIRED
+                    </p>
+
+                    <button
+                        onClick={() =>
+                            router.push(
+                                "/final-authorization/authorization"
+                            )
+                        }
+                        className="mt-4 border border-primary text-primary px-8 py-3 hover:bg-primary hover:text-black transition"
+                    >
+                        Enter Recovery Key
+                    </button>
+
+                </motion.div>
+
             )}
-          </div>
-        </div>
-      </BlackboxShell>
-    </PageTransition>
-  );
+
+        </PageTransition>
+    );
+}
+
+function StatusCard({
+    title,
+    status,
+    success = false,
+}: {
+    title: string;
+    status: string;
+    success?: boolean;
+}) {
+    return (
+        <motion.div
+            whileHover={{ scale: 1.02 }}
+            className={`glass-panel p-4 flex justify-between items-center border ${success
+                    ? "border-primary/30 bg-primary/5"
+                    : "border-border"
+                }`}
+        >
+            <div className="flex items-center gap-3">
+
+                {success ? (
+                    <ShieldCheck
+                        size={18}
+                        className="text-primary"
+                    />
+                ) : (
+                    <Lock
+                        size={18}
+                        className="text-secondary-text"
+                    />
+                )}
+
+                <span className="font-mono text-sm">
+                    {title}
+                </span>
+
+            </div>
+
+            <span
+                className={`font-mono text-xs px-2 py-1 rounded ${success
+                        ? "bg-primary/20 text-primary"
+                        : "bg-surface text-secondary-text"
+                    }`}
+            >
+                {status}
+            </span>
+        </motion.div>
+    );
 }

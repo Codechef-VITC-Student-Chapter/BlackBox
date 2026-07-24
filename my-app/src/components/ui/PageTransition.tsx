@@ -9,7 +9,7 @@ export const PageTransition = ({ children }: { children: React.ReactNode }) => {
       animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
       exit={{ opacity: 0, filter: "blur(10px)", y: -20 }}
       transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full h-full"
+      className="w-full max-w-7xl mx-auto"
     >
       {children}
     </motion.div>

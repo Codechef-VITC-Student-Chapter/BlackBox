@@ -1,136 +1,228 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
-import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
-import { synth } from "@/utils/synthAudio";
-
-const BOOT_LOGS = [
-  "Checking recovered subsystems...",
-  "Loading recovery status...",
-  "Security Clearance Verified",
-  "██████████ 100%",
-  "CORE STATUS : OFFLINE",
-  "Recovery Required"
-];
-
-const STATUS_CARDS: StatusCardInfo[] = [
-  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
-  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
-  { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
-  { title: "Visual/Puzzle", status: "COMPLETE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
-  { title: "Core Vault", status: "ACTIVE", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
-];
+import {
+  Terminal,
+  CheckCircle2,
+  Lock,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAudio } from "@/hooks/useAudio";
+import { useRouter } from "next/navigation";
 
 export default function CoreVaultPage() {
-  const router = useRouter();
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
+  const { playSound } = useAudio();
+  const router = useRouter();
 
   useEffect(() => {
+    const sequence = [
+      "Checking recovered subsystems...",
+      "Loading recovery status...",
+      "Security Clearance Verified",
+      "██████████ 100%",
+      "CORE STATUS : OFFLINE",
+      "Recovery Required"
+    ];
+
     let i = 0;
+
     const interval = setInterval(() => {
-      if (i < BOOT_LOGS.length) {
-        const line = BOOT_LOGS[i];
+      if (i < sequence.length) {
+        const line = sequence[i];
+
         setTerminalLines((prev) => [...prev, line]);
-        synth.playClick();
-        if (line.includes("OFFLINE")) {
-          synth.playError();
-        }
+
+        playSound("typing");
+
         i++;
       } else {
         clearInterval(interval);
       }
-    }, 600);
+    }, 800);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [playSound]);
 
   return (
     <PageTransition>
-      <BlackboxShell
-        moduleCode="MOD-05"
-        exeName="CORE_RECOVERY.EXE"
-        terminalLabel="VT-520 CORE SECURE VAULT"
-        maintenanceSeal="#4095"
-        pwrLight="green"
-        errLight="red"
-        errLabel="ERR"
-        terminalHeaderExe="core_diagnostics.log"
-        baudRate="1200 BAUD"
-        ttyNumber="TTY-05"
-        directiveTitle="CLASSIFIED DIRECTIVE // VAULT RECOVERY"
-        directiveText={
-          <>
-            The core vault handles low-level instructions verification.
-            <br />
-            To recover the core, provide the decrypted token from Module 4.
-          </>
-        }
-        statusLabel="SYSTEM STATUS"
-        statusCards={STATUS_CARDS}
-        radarLabel="SECURING"
-        radarSublabel="VAULT SECURITY GATE"
-        bottomBarText="CAUTION: CORE OVERRIDE SYSTEM STANDBY"
-        bottomBarSerial="#8409-CORE"
-        wallStencil="CONTROL ROOM 04 // CORE SECTOR"
-      >
-        {/* Terminal output */}
-        <div className="max-h-36 overflow-y-auto mb-4 border-b border-[#122414] pb-4 flex-shrink-0 space-y-1 text-xs">
-          {terminalLines.map((line, idx) => (
-            <p
-              key={idx}
-              className={`text-xs ${
-                line.includes("OFFLINE") ? "text-[#ff3333] font-bold" : "text-[#3c663a]"
-              }`}
-            >
-              &gt; {line}
-            </p>
-          ))}
-          {terminalLines.length < BOOT_LOGS.length && (
-            <span className="inline-block w-1.5 h-3 bg-[#33ff66]/70 ml-1 animate-pulse" />
-          )}
-        </div>
+      <div className="w-full min-h-[80vh] flex flex-col lg:flex-row gap-8">
 
-        {/* Recovered Modules & Recover button */}
-        <div className="flex-1 overflow-y-auto flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="text-[10px] text-[#264c23] uppercase tracking-widest border-b border-[#112211] pb-1.5 mb-2 font-bold select-none">
-              // RECOVERED MODULES INTEGRITY STATUS
-            </div>
+        {/* Left Terminal */}
 
-            <div className="divide-y divide-[#122414] border border-[#1a2d1d] bg-[#040e04] rounded-md">
-              {[
-                { name: "Authentication", status: "COMPLETE", ok: true },
-                { name: "Repository", status: "COMPLETE", ok: true },
-                { name: "Gateway", status: "COMPLETE", ok: true },
-                { name: "CodeChef Puzzle", status: "COMPLETE", ok: true },
-                { name: "Core Vault", status: "OFFLINE", ok: false },
-              ].map(mod => (
-                <div key={mod.name} className="flex justify-between items-center px-4 py-2 text-xs">
-                  <span className="font-mono text-[#3c663a]">{mod.name}</span>
-                  <span className={`font-mono font-bold ${mod.ok ? "text-[#33ff66]" : "text-[#ff3333]"}`}>
-                    {mod.ok ? "✓ COMPLETE" : "✖ OFFLINE"}
-                  </span>
-                </div>
-              ))}
-            </div>
+        <div className="flex-1 glass-panel flex flex-col overflow-hidden">
+
+          <div className="border-b border-border bg-surface/50 p-4 flex items-center gap-3">
+            <Terminal
+              size={18}
+              className="text-secondary-text"
+            />
+
+            <span className="font-mono text-sm tracking-wider text-secondary-text">
+              CORE_RECOVERY.EXE
+            </span>
           </div>
 
-          <div className="pt-4 border-t border-[#1a2d1d] select-none">
+          <div className="flex-1 p-6 space-y-3 font-mono text-sm">
+
+            {terminalLines.map((line, idx) => (
+
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`${line.includes("OFFLINE")
+                    ? "text-danger"
+                    : "text-primary"
+                  }`}
+              >
+                {`> ${line}`}
+              </motion.div>
+
+            ))}
+
+            <motion.div
+              animate={{ opacity: [1, 0] }}
+              transition={{ repeat: Infinity, duration: 0.8 }}
+              className="inline-block ml-2 w-2.5 h-4 bg-primary"
+            />
+
+          </div>
+
+          <div className="border-t border-border bg-surface/30 p-6">
+
+            <div className="font-mono text-sm space-y-2">
+
+              <p className="text-secondary-text">
+                Recovered Modules
+              </p>
+
+              <div className="space-y-1 text-text">
+
+                <p>✓ Authentication</p>
+
+                <p>✓ Repository</p>
+
+                <p>✓ Gateway</p>
+
+                <p>✓ CodeChef Puzzle</p>
+
+                <p className="text-danger">
+                  ✖ Core
+                </p>
+
+              </div>
+
+            </div>
+
             <button
-              onClick={() => {
-                synth.playClick();
-                router.push("/core-vault/submit-key");
-              }}
-              className="w-full border border-[#33ff66] text-[#33ff66] bg-transparent hover:bg-[#33ff66] hover:text-black font-mono font-bold text-xs tracking-widest py-3.5 rounded-none transition-all duration-300 uppercase cursor-pointer"
+              onClick={() =>
+                router.push("/core-vault/submit-key")
+              }
+              className="mt-8 w-full border border-primary text-primary font-mono py-3 hover:bg-primary hover:text-background transition-all duration-300"
             >
-              RECOVER CORE VAULT
+              Recover Core
             </button>
+
           </div>
+
         </div>
-      </BlackboxShell>
+
+        {/* Right Side */}
+
+        <div className="lg:w-80 flex flex-col gap-4">
+
+          <h2 className="font-heading text-lg uppercase tracking-widest text-secondary-text">
+
+            System Status
+
+          </h2>
+
+          <StatusCard
+            title="Authentication"
+            status="ONLINE"
+            success
+          />
+
+          <StatusCard
+            title="Repository"
+            status="ONLINE"
+            success
+          />
+
+          <StatusCard
+            title="Gateway"
+            status="ONLINE"
+            success
+          />
+
+          <StatusCard
+            title="Puzzle"
+            status="COMPLETE"
+            success
+          />
+
+          <StatusCard
+            title="Core"
+            status="LOCKED"
+          />
+          <StatusCard
+            title="Final Authorization"
+            status="PENDING"
+          />
+        </div>
+
+      </div>
     </PageTransition>
+  );
+}
+
+function StatusCard({
+  title,
+  status,
+  success = false,
+}: {
+  title: string;
+  status: string;
+  success?: boolean;
+}) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className={`glass-panel p-4 flex justify-between items-center border ${success
+          ? "border-primary/30 bg-primary/5"
+          : "border-border"
+        }`}
+    >
+      <div className="flex items-center gap-3">
+
+        {success ? (
+          <CheckCircle2
+            size={18}
+            className="text-primary"
+          />
+        ) : (
+          <Lock
+            size={18}
+            className="text-secondary-text"
+          />
+        )}
+
+        <span className="font-mono text-sm text-text">
+          {title}
+        </span>
+
+      </div>
+
+      <span
+        className={`font-mono text-xs px-2 py-1 rounded ${success
+            ? "bg-primary/20 text-primary"
+            : "bg-surface text-secondary-text"
+          }`}
+      >
+        {status}
+      </span>
+    </motion.div>
   );
 }
