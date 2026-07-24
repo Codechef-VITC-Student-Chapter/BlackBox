@@ -68,6 +68,7 @@ export default function RepositoryReconstruction() {
       
       addTerminalLine("SUCCESS: MIRROR HOST IDENTIFIED. CONNECTING...", "success");
       setSuccessMsg("Repository Located. Connecting...");
+      window.open(data.verifiedUrl ?? data.url, "_blank", "noopener,noreferrer");
       
       setShowSync(true);
       synth.playProgress(4.0);
@@ -182,7 +183,7 @@ export default function RepositoryReconstruction() {
         <div className="flex-1 overflow-y-auto flex flex-col justify-between">
           <div className="space-y-4">
             <div className="text-[10px] text-[#264c23] uppercase tracking-widest border-b border-[#112211] pb-1.5 mb-2">
-              // RECONSTRUCTION PARAMETERS
+              {"// RECONSTRUCTION PARAMETERS"}
             </div>
 
             <AnimatePresence>
