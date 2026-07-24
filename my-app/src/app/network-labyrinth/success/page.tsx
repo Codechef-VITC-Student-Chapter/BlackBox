@@ -69,7 +69,7 @@ export default function GatewayRestoredPage() {
       if (idx >= BOOT_LINES.length) {
         clearInterval(interval);
         setRedirecting(true);
-        setTimeout(() => router.push("/memory-reconstruction"), 1400);
+        setTimeout(() => router.push("/codechef-puzzle"), 1400);
       }
     }, 900);
     return () => clearInterval(interval);
