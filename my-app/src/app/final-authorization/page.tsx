@@ -79,34 +79,34 @@ export default function FinalAuthorizationPage() {
         wallStencil="CONTROL ROOM 04 // GATEWAY CENTER"
         compactStatus={true}
       >
+      <div className="h-full min-h-0 overflow-y-auto pr-2">
+
         {/* Terminal output */}
-        <div className="max-h-36 overflow-y-auto mb-4 border-b border-[#122414] pb-4 flex-shrink-0 space-y-1 text-xs">
-          {terminalLines.map((line, idx) => (
-            <p
-              key={idx}
-              className={`text-xs ${
-                line === "BLACKBOX" ? "text-[#33ff66] font-bold text-sm" :
+        {/* Terminal output */}
+        <div className="mb-4 border-b border-[#122414] pb-4 flex-shrink-0 space-y-1 text-xs">          {terminalLines.map((line, idx) => (
+          <p
+            key={idx}
+            className={`text-xs ${line === "BLACKBOX" ? "text-[#33ff66] font-bold text-sm" :
                 line === "WHERE IT ALL STARTED" ? "text-white font-bold" :
-                line === "" ? "h-2" : "text-[#3c663a]"
+                  line === "" ? "h-2" : "text-[#3c663a]"
               }`}
-            >
-              {line !== "" && `> ${line}`}
-            </p>
-          ))}
+          >
+            {line !== "" && `> ${line}`}
+          </p>
+        ))}
           {terminalLines.length < BOOT_LOGS.length && (
             <span className="inline-block w-1.5 h-3 bg-[#33ff66]/70 ml-1 animate-pulse" />
           )}
         </div>
 
         {/* Narrative & Kalashnikov image & action button */}
-        <div className="flex-1 overflow-y-auto flex flex-col justify-between space-y-4">
           <div className="overflow-hidden border border-[#1a2d1d] bg-[#030703]">
             <Image
               src="/images/kalashnikov.png"
               alt="Design Team Archive"
               width={1200}
               height={700}
-              className="w-full object-cover opacity-90 border-none"
+              className="w-full h-auto opacity-90 border-none"
             />
           </div>
 
