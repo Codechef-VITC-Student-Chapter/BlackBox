@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
 import PuzzleBoard from "./puzzle-board/PuzzleBoard";
@@ -24,6 +25,8 @@ const STATUS_CARDS: StatusCardInfo[] = [
 ];
 
 export default function CodeChefPuzzleLanding() {
+  const router = useRouter();
+
   return (
     <PageTransition>
       <BlackboxShell
@@ -59,7 +62,12 @@ export default function CodeChefPuzzleLanding() {
             // VISUAL RECONSTRUCTION BOARD ... 5x5 TILE MATRIX
           </div>
           
-          <PuzzleBoard />
+          <button
+  onClick={() => router.push("/codechef-puzzle/puzzle-board")}
+  className="w-full border border-[#33ff66] text-black bg-[#33ff66] font-mono font-bold tracking-widest py-3.5 hover:shadow-[0_0_12px_rgba(51,255,102,0.6)] transition-all duration-300 uppercase cursor-pointer text-xs"
+>
+  SOLVE PUZZLE
+</button>
         </div>
       </BlackboxShell>
     </PageTransition>
