@@ -48,6 +48,18 @@ const teamSchema = new Schema(
       min: 0,
       default: 0,
     },
+    module4Data: {
+      plaintextKey: {
+        type: String,
+        trim: true,
+        default: null,
+      },
+      encryptedKey: {
+        type: String,
+        trim: true,
+        default: null,
+      },
+    },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },

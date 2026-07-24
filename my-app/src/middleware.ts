@@ -12,5 +12,11 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/network-labyrinth/:path*"],
+  matcher: [
+    "/network-labyrinth/:path*",
+    "/codechef-puzzle/:path*",
+    "/core-vault/:path*",
+    "/engineer-certification/:path*",
+    "/final-authorization/:path*",
+  ],
 };

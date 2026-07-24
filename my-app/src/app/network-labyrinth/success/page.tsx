@@ -4,6 +4,7 @@ import { GAME_CONFIG } from "@/config/game";
 import { getAuthenticatedTeamFromToken } from "@/lib/auth/session";
 import { hasCompletedModule } from "@/lib/modules/progress";
 import GatewayRestoredClient from "./GatewayRestoredClient";
+import UnauthorizedSuccessAccess from "./UnauthorizedSuccessAccess";
 
 const MODULE_NUMBER = 3;
 
@@ -19,7 +20,7 @@ export default async function GatewayRestoredPage() {
   const completedModule3 = await hasCompletedModule(team.teamId, MODULE_NUMBER);
 
   if (!completedModule3) {
-    redirect("/network-labyrinth");
+    return <UnauthorizedSuccessAccess />;
   }
 
   return <GatewayRestoredClient />;
