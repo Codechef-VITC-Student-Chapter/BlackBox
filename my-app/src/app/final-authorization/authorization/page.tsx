@@ -86,7 +86,7 @@ export default function AuthorizationPage() {
     try {
       setSubmitting(true);
 
-      const response = await fetch("/api/final-authorization", {
+      const response = await fetch("/api/final-authorization/verify", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -298,7 +298,7 @@ export default function AuthorizationPage() {
 
       </div>
     </div>
-  </BlackboxShell>
+  </BlackboxShell> 
 </PageTransition>
 );
 }
