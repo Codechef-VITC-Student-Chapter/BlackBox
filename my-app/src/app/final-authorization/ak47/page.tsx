@@ -19,7 +19,7 @@ const STATUS_CARDS: StatusCardInfo[] = [
   { title: "Final Authorization", status: "ACTIVE", modId: "MOD-07", serial: "SN:84-F7", iconType: "final" },
 ];
 
-export default function WeaponSystemPage() {
+export default function ak47() {
   const router = useRouter();
   const [modeIndex, setModeIndex] = useState(0);
   const [activated, setActivated] = useState(false);

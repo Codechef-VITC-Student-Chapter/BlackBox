@@ -110,17 +110,7 @@ export default function FinalAuthorizationPage() {
             />
           </div>
 
-          <div className="pt-2 select-none">
-            <button
-              onClick={() => {
-                synth.playClick();
-                router.push("/final-authorization/authorization");
-              }}
-              className="w-full border border-[#33ff66] text-[#33ff66] bg-transparent hover:bg-[#33ff66] hover:text-black font-mono font-bold text-xs tracking-widest py-3.5 rounded-none transition-all duration-300 uppercase cursor-pointer"
-            >
-              ENTER GATEWAY AUTHORIZATION
-            </button>
-          </div>
+          
         </div>
       </BlackboxShell>
     </PageTransition>
