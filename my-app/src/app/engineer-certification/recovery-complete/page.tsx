@@ -1,14 +1,19 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import {
-  Terminal,
-  CheckCircle2,
-  ArrowRight,
-} from "lucide-react";
-
 import { PageTransition } from "@/components/ui/PageTransition";
+import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
+import { synth } from "@/utils/synthAudio";
+import { CheckCircle2, ArrowRight } from "lucide-react";
+
+const STATUS_CARDS: StatusCardInfo[] = [
+  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
+  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
+  { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
+  { title: "Visual/Puzzle", status: "COMPLETE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
+  { title: "Core Vault", status: "COMPLETE", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
+  { title: "Certification", status: "ACTIVE", modId: "MOD-06", serial: "SN:84-E6", iconType: "cert" },
+];
 
 export default function RecoveryCompletePage() {
   const router = useRouter();
@@ -22,134 +27,98 @@ export default function RecoveryCompletePage() {
     "Engineer Certification",
   ];
 
+  const handleContinue = () => {
+    synth.playClick();
+    router.push("/engineer-certification/victory-capture");
+  };
+
   return (
     <PageTransition>
-      <div className="flex justify-center items-center min-h-[80vh]">
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-panel w-full max-w-5xl overflow-hidden"
-        >
-
-          {/* Header */}
-
-          <div className="border-b border-border bg-surface/40 p-4 flex items-center gap-3">
-            <Terminal size={18} className="text-secondary-text" />
-            <span className="font-mono text-sm tracking-widest uppercase text-secondary-text">
-              Recovery Complete
-            </span>
+      <BlackboxShell
+        moduleCode="MOD-06"
+        exeName="SYSTEM_RECOVERY.EXE"
+        terminalLabel="STAGE 6 COMPLETE"
+        maintenanceSeal="#4096"
+        pwrLight="green"
+        errLight="red"
+        errLabel="ERR"
+        terminalHeaderExe="system_restore.log"
+        baudRate="9600 BAUD"
+        ttyNumber="TTY-06"
+        directiveTitle="CLASSIFIED DIRECTIVE // RESTORATION"
+        directiveText={
+          <>
+            Subsystems recovery operations complete.
+            <br />
+            Deploy the victory capture sequence to claim certification.
+          </>
+        }
+        statusLabel="SYSTEM STATUS"
+        statusCards={STATUS_CARDS}
+        radarLabel="SECURED"
+        radarSublabel="GRADER SECURE"
+        bottomBarText="RECOVERY COMPLETED SUCCESSFULLY"
+        bottomBarSerial="#8409-RECOVERY-OK"
+        wallStencil="CONTROL ROOM 04 // ENG SECTOR"
+        compactStatus={true}
+      >
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-between space-y-4">
+          <div className="text-center py-2 select-none">
+            <CheckCircle2
+              size={52}
+              className="mx-auto text-[#33ff66] mb-2 drop-shadow-[0_0_8px_#33ff66]"
+            />
+            <h1 className="font-mono text-xl font-bold tracking-widest text-[#33ff66] uppercase">
+              System Restored
+            </h1>
+            <p className="font-mono text-[10px] text-[#3c663a] mt-0.5">
+              Every subsystem has been successfully recovered.
+            </p>
           </div>
 
-          {/* Body */}
-
-          <div className="p-10 space-y-10">
-
-            {/* Success */}
-
-            <div className="text-center">
-
-              <CheckCircle2
-                size={72}
-                className="mx-auto text-primary mb-5"
-              />
-
-              <h1 className="font-heading text-4xl uppercase tracking-widest text-primary">
-                System Restored
-              </h1>
-
-              <p className="font-mono text-secondary-text mt-4">
-                Every subsystem has been successfully recovered.
-              </p>
-
+          {/* Checklist */}
+          <div className="space-y-2 select-none">
+            <div className="text-[10px] text-[#264c23] uppercase tracking-widest border-b border-[#112211] pb-1 font-bold">
+              // BLACKBOX ARCHIVE STATUS
             </div>
-
-            {/* Progress */}
-
-            <div className="glass-panel p-6">
-
-              <h2 className="font-heading text-xl tracking-widest mb-6 text-primary uppercase">
-                BLACKBOX Status
-              </h2>
-
-              <div className="grid md:grid-cols-2 gap-4">
-
-                {modules.map((module) => (
-                  <div
-                    key={module}
-                    className="flex items-center justify-between border border-border rounded-lg px-4 py-3"
-                  >
-                    <span className="font-mono text-text">
-                      {module}
-                    </span>
-
-                    <span className="text-primary font-bold">
-                      ✓
-                    </span>
-                  </div>
-                ))}
-
-              </div>
-
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              {modules.map((module) => (
+                <div
+                  key={module}
+                  className="flex items-center justify-between border border-[#1a2d1d] bg-[#040e04] rounded-md px-3 py-2 font-mono text-[#3c663a]"
+                >
+                  <span>{module}</span>
+                  <span className="text-[#33ff66] font-bold">✓</span>
+                </div>
+              ))}
             </div>
-
-            {/* Architect */}
-
-            <div className="glass-panel p-6 font-mono text-sm leading-7 text-secondary-text">
-
-              <p className="text-primary mb-4">
-                &gt; Final Transmission
-              </p>
-
-              <p>Congratulations.</p>
-              <p>You recovered BLACKBOX.</p>
-              <br />
-              <p>You investigated.</p>
-              <p>You observed.</p>
-              <p>You connected every clue.</p>
-              <p>You restored every subsystem.</p>
-              <br />
-              <p className="text-text">
-                The system finally trusts you.
-              </p>
-
-            </div>
-
-            {/* Transition */}
-
-            <div className="glass-panel p-6 font-mono text-sm">
-
-              <p>&gt; Preparing Final Archive...</p>
-              <p>&gt; Generating Engineer Identity...</p>
-              <p>&gt; One final memory remains.</p>
-
-            </div>
-
-            {/* Button */}
-
-            <div className="flex justify-end">
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() =>
-                  router.push("/engineer-certification/victory-capture")
-                }
-                className="bg-primary text-black font-bold px-6 py-3 rounded-lg flex items-center gap-2"
-              >
-                Continue
-
-                <ArrowRight size={18} />
-
-              </motion.button>
-
-            </div>
-
           </div>
 
-        </motion.div>
+          {/* Final Transmission */}
+          <div className="bg-[#030703] border border-[#1a2d1d] rounded-md p-4 font-mono text-[10px] text-[#3c663a] leading-relaxed space-y-1">
+            <p className="text-[#33ff66] font-bold uppercase tracking-wider mb-1">// FINAL TRANSMISSION</p>
+            <p>Congratulations. You recovered BLACKBOX.</p>
+            <p>You investigated. You observed.</p>
+            <p>You connected every clue. You restored every subsystem.</p>
+            <p className="text-white font-bold pt-1">The system finally trusts you.</p>
+          </div>
 
-      </div>
+          <div className="bg-[#030703] border border-[#1a2d1d] rounded-md p-3 font-mono text-[10px] text-[#3c663a] space-y-0.5">
+            <p>&gt; Preparing Final Archive...</p>
+            <p>&gt; Generating Engineer Identity...</p>
+            <p>&gt; One final memory remains.</p>
+          </div>
+
+          <div className="pt-2 select-none">
+            <button
+              onClick={handleContinue}
+              className="w-full border border-[#33ff66] text-black bg-[#33ff66] hover:shadow-[0_0_12px_rgba(51,255,102,0.6)] py-3.5 px-6 font-mono font-bold tracking-widest rounded-none transition-all duration-300 uppercase cursor-pointer text-xs flex items-center justify-center gap-2"
+            >
+              CONTINUE <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+      </BlackboxShell>
     </PageTransition>
   );
 }

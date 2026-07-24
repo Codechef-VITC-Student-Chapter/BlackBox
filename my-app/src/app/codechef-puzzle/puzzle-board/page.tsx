@@ -1,164 +1,55 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { PageTransition } from "@/components/ui/PageTransition";
+import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
+import PuzzleBoard from "./PuzzleBoard";
 
-const DEFAULT_IMAGE_SRC = "/images/logo.png";
+const STATUS_CARDS: StatusCardInfo[] = [
+  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
+  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
+  { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
+  { title: "Visual/Puzzle", status: "ACTIVE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
+  { title: "Core Vault", status: "LOCKED", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
+];
 
-function buildSolvedTiles(total: number) {
-  return Array.from({ length: total }, (_, i) => i);
-}
-
-function getNeighbors(blankIndex: number, size: number) {
-  const row = Math.floor(blankIndex / size);
-  const col = blankIndex % size;
-  const neighbors: number[] = [];
-  if (row > 0) neighbors.push(blankIndex - size);
-  if (row < size - 1) neighbors.push(blankIndex + size);
-  if (col > 0) neighbors.push(blankIndex - 1);
-  if (col < size - 1) neighbors.push(blankIndex + 1);
-  return neighbors;
-}
-
-function shuffleTiles(size: number): number[] {
-  const total = size * size;
-  const moves = total * 25;
-  const tiles = buildSolvedTiles(total);
-  let blankIndex = total - 1;
-  let lastMove = -1;
-
-  for (let i = 0; i < moves; i++) {
-    const neighbors = getNeighbors(blankIndex, size).filter((n) => n !== lastMove);
-    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
-    [tiles[blankIndex], tiles[next]] = [tiles[next], tiles[blankIndex]];
-    lastMove = blankIndex;
-    blankIndex = next;
-  }
-
-  if (tiles.every((v, i) => v === i)) return shuffleTiles(size);
-  return tiles;
-}
-
-export default function PuzzleBoard() {
-  const gridSize = 5;
-  const imageSrc = DEFAULT_IMAGE_SRC;
-  const total = gridSize * gridSize;
-  const [tiles, setTiles] = useState<number[]>(() => buildSolvedTiles(total));
-  const [moves, setMoves] = useState(0);
-
-  useEffect(() => {
-    setTiles(shuffleTiles(gridSize));
-  }, [gridSize]);
-
-  const blankIndex = tiles.indexOf(total - 1);
-  const isSolved = tiles.every((value, index) => value === index);
-  const tileSize = 100 / gridSize;
-
-  const handleTileClick = useCallback(
-    (index: number) => {
-      if (isSolved) return;
-      const neighbors = getNeighbors(blankIndex, gridSize);
-      if (!neighbors.includes(index)) return;
-
-      const next = [...tiles];
-      [next[blankIndex], next[index]] = [next[index], next[blankIndex]];
-      setTiles(next);
-      setMoves((m) => m + 1);
-    },
-    [tiles, blankIndex, gridSize, isSolved]
-  );
-
-  const positions = useMemo(() => {
-    return tiles.map((value, index) => {
-      const posRow = Math.floor(index / gridSize);
-      const posCol = index % gridSize;
-      const srcRow = Math.floor(value / gridSize);
-      const srcCol = value % gridSize;
-      return { value, index, posRow, posCol, srcRow, srcCol };
-    });
-  }, [tiles, gridSize]);
-
+export default function PuzzleBoardPage() {
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full glass-panel border-2 border-primary/40">
-          <span className="text-primary text-xs font-bold tracking-wider">MOVES</span>
-          <span className="text-foreground text-sm font-bold">{moves}</span>
+    <PageTransition>
+      <BlackboxShell
+        moduleCode="MOD-04"
+        exeName="PUZZLE_BOARD.EXE"
+        terminalLabel="5×5 TILE RECONSTRUCTION MATRIX"
+        maintenanceSeal="#4094"
+        pwrLight="green"
+        errLight="red"
+        errLabel="ERR"
+        terminalHeaderExe="puzzle_matrix.log"
+        baudRate="1200 BAUD"
+        ttyNumber="TTY-04"
+        directiveTitle="CLASSIFIED DIRECTIVE // RECONSTRUCTION"
+        directiveText={
+          <>
+            The visual matrix requires correct tile sorting to resolve checksum hashes.
+            <br />
+            Select adjacent tiles to swap them into position.
+          </>
+        }
+        statusLabel="SYSTEM STATUS"
+        statusCards={STATUS_CARDS}
+        radarLabel="ASSEMBLING"
+        radarSublabel="LOGIC MATRIX / 5x5 IMAGE"
+        bottomBarText="CAUTION: CALIBRATION REQUIRED"
+        bottomBarSerial="#8409-PUZZLE"
+        wallStencil="CONTROL ROOM 04 // VISUAL SECTOR"
+      >
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-between items-center relative z-10">
+          <div className="w-full text-[10px] text-[#264c23] uppercase tracking-widest border-b border-[#112211] pb-1.5 mb-3 font-bold select-none">
+            // VISUAL RECONSTRUCTION BOARD ... 5x5 TILE MATRIX
+          </div>
+          
+          <PuzzleBoard />
         </div>
-        <div
-          className={`px-4 py-1.5 rounded-full border-2 shadow-[0_3px_0_rgba(0,0,0,0.6)] text-xs font-bold tracking-wider cursor-default select-none ${
-            isSolved
-              ? "bg-primary border-primary/60 text-black"
-              : "bg-amber-600 border-amber-300 text-black"
-          }`}
-        >
-          {isSolved ? "RESTORED" : "CORRUPTED"}
-        </div>
-      </div>
-
-      <div className="relative p-[4px] rounded-2xl bg-primary/80 shadow-[0_6px_0_rgba(21,94,117,1),0_0_45px_rgba(34,211,238,0.35)]">
-        <div
-          className="relative bg-surface rounded-[14px] overflow-hidden"
-          style={{ width: "min(92vw, 480px)", aspectRatio: "1 / 1" }}
-        >
-          {positions.map(({ value, posRow, posCol, srcRow, srcCol, index }) => {
-            const isBlank = value === total - 1;
-
-            if (isBlank) {
-              return (
-                <div
-                  key={value}
-                  className="absolute flex items-center justify-center transition-transform duration-300 ease-out"
-                  style={{
-                    width: `${tileSize}%`,
-                    height: `${tileSize}%`,
-                    transform: `translate(${posCol * 100}%, ${posRow * 100}%)`,
-                    padding: "4px",
-                  }}
-                >
-                  <div className="w-full h-full rounded-md border-2 border-dashed border-red-500/80 bg-black/70 shadow-[0_0_18px_rgba(239,68,68,0.5),inset_0_2px_8px_rgba(0,0,0,0.8)] flex items-center justify-center animate-pulse">
-                    <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_14px_rgba(239,68,68,1)]" />
-                  </div>
-                </div>
-              );
-            }
-
-            return (
-              <button
-                key={value}
-                onClick={() => handleTileClick(index)}
-                disabled={isSolved}
-                className="absolute transition-transform duration-300 ease-out active:translate-y-[1px]"
-                style={{
-                  width: `${tileSize}%`,
-                  height: `${tileSize}%`,
-                  transform: `translate(${posCol * 100}%, ${posRow * 100}%)`,
-                  padding: "4px",
-                }}
-              >
-                <div
-                  className="w-full h-full rounded-md border border-primary/60 overflow-hidden shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-2px_5px_rgba(0,0,0,0.55),0_2px_4px_rgba(0,0,0,0.5)] hover:brightness-110"
-                  style={{
-                    backgroundImage: `url(${imageSrc})`,
-                    backgroundSize: `${gridSize * 100}% ${gridSize * 100}%`,
-                    backgroundPosition: `${(srcCol * 100) / (gridSize - 1)}% ${(srcRow * 100) / (gridSize - 1)}%`,
-                  }}
-                />
-              </button>
-            );
-          })}
-
-          <div
-            className="absolute inset-0 transition-opacity duration-500 ease-out"
-            style={{
-              backgroundImage: `url(${imageSrc})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              opacity: isSolved ? 1 : 0,
-              pointerEvents: "none",
-            }}
-          />
-        </div>
-      </div>
-    </div>
+      </BlackboxShell>
+    </PageTransition>
   );
 }
