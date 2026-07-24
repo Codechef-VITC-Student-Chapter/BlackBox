@@ -1,8 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { GAME_CONFIG } from "@/config/game";
-import { getAuthenticatedTeamFromToken } from "@/lib/auth/session";
 import { connectToDatabase } from "@/lib/db/mongodb";
 import { jsonError } from "@/lib/http/responses";
+import { getActiveModuleTeam } from "@/lib/modules/activeModule";
 import { generateM3Fragments } from "@/lib/modules/m3fragments";
 import { Team } from "@/models/Team";
 
@@ -14,13 +13,12 @@ export const runtime = "nodejs";
  * Key insight: participants must inspect a FAILED (red) request in DevTools.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const token = request.cookies.get(GAME_CONFIG.authCookieName)?.value;
-  const team = await getAuthenticatedTeamFromToken(token);
+  const auth = await getActiveModuleTeam(request, 3, "Network Labyrinth");
 
-  if (!team) return jsonError("Unauthenticated.", 401);
+  if (!auth.ok) return jsonError(auth.message, auth.status);
 
   await connectToDatabase();
-  const teamDoc = await Team.findOne({ teamId: team.teamId })
+  const teamDoc = await Team.findOne({ teamId: auth.team.teamId })
     .select("+eventToken")
     .lean<{ eventToken: string } | null>();
 

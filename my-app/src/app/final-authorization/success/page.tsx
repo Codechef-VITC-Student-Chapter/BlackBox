@@ -47,14 +47,10 @@ export default function SuccessPage() {
       });
     }, 1000);
 
-    const navigateTimer = setTimeout(() => {
-      synth.playSuccess();
-      router.push("/engineer-certification");
-    }, 7500);
+
 
     return () => {
       clearTimeout(titleTimer);
-      clearTimeout(navigateTimer);
       clearInterval(interval);
     };
   }, [router]);

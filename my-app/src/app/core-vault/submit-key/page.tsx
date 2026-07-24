@@ -91,7 +91,7 @@ export default function CoreRecoveryPage() {
             <p
               key={index}
               className={`text-xs ${
-                line.includes("FAILED") ? "text-[#ff3333] font-bold" :
+                line?.includes("FAILED") ? "text-[#ff3333] font-bold" :
                 line === "SYSTEM REPORT" ? "text-[#33ff66] font-bold" :
                 line === "" ? "h-2" : "text-[#3c663a]"
               }`}

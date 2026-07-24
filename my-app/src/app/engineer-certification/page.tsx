@@ -86,7 +86,7 @@ export default function EngineerCertificationPage() {
               key={index}
               className={`text-xs ${
                 line === "SYSTEM RESTORED" ? "text-[#33ff66] font-bold text-sm" :
-                line.includes("VERIFIED") ? "text-[#33ff66]" :
+                line?.includes("VERIFIED") ? "text-[#33ff66]" :
                 line === "" ? "h-2" : "text-[#3c663a]"
               }`}
             >
