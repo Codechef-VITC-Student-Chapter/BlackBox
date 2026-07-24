@@ -118,7 +118,7 @@ export default function QRForensicScan() {
             <p 
               key={idx} 
               className={`mb-1 ${
-                log.startsWith("SENSOR STATUS:") || log.endsWith("SUCCESSFULLY.") 
+                log?.startsWith("SENSOR STATUS:") || log?.endsWith("SUCCESSFULLY.") 
                   ? "text-[#33ff66] drop-shadow-[0_0_4px_rgba(51,255,102,0.4)]" 
                   : "text-[#33ff66]/80"
               }`}

@@ -203,13 +203,13 @@ export default function RepositoryVerification() {
             <p 
               key={idx} 
               className={`mb-1 ${
-                line.type === "system" ? "text-[#33ff66] drop-shadow-[0_0_4px_rgba(51,255,102,0.4)]" : 
-                line.type === "error" ? "text-[#ff3333] font-bold drop-shadow-[0_0_4px_rgba(255,51,51,0.5)]" : 
-                line.type === "success" ? "text-[#33ff66] font-bold drop-shadow-[0_0_4px_rgba(51,255,102,0.6)]" :
+                line?.type === "system" ? "text-[#33ff66] drop-shadow-[0_0_4px_rgba(51,255,102,0.4)]" : 
+                line?.type === "error" ? "text-[#ff3333] font-bold drop-shadow-[0_0_4px_rgba(255,51,51,0.5)]" : 
+                line?.type === "success" ? "text-[#33ff66] font-bold drop-shadow-[0_0_4px_rgba(51,255,102,0.6)]" :
                 "text-[#33ff66]/80"
               }`}
             >
-              &gt; {line.text}
+              &gt; {line?.text}
             </p>
           ))}
           <div ref={terminalEndRef} />

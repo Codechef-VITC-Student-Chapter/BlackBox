@@ -39,7 +39,6 @@ const STATUS_CARDS: StatusCardInfo[] = [
 ];
 
 export default function ReconstructSuccess() {
-  const router = useRouter();
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
@@ -58,21 +57,7 @@ export default function ReconstructSuccess() {
     return () => clearInterval(timer);
   }, []);
 
-  const triggerRedirect = useCallback(() => {
-    router.push("/repository-recovery/verify");
-  }, [router]);
-
-  useEffect(() => {
-    if (countdown === 0) {
-      triggerRedirect();
-    }
-  }, [countdown, triggerRedirect]);
-
-  const handleContinue = () => {
-    synth.playClick();
-    triggerRedirect();
-  };
-
+  
   return (
     <PageTransition>
       <BlackboxShell
@@ -173,7 +158,7 @@ export default function ReconstructSuccess() {
             </p>
             
             <button 
-              onClick={handleContinue}
+              
               className="w-full border border-[#33ff66] text-black bg-[#33ff66] hover:shadow-[0_0_12px_rgba(51,255,102,0.6)] py-3 px-8 font-mono font-bold tracking-widest rounded-none transition-all duration-300 uppercase cursor-pointer text-xs"
             >
               CONTINUE
