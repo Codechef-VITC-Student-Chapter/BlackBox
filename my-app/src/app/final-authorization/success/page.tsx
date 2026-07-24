@@ -134,22 +134,10 @@ export default function SuccessPage() {
           </div>
 
           {step === LOADING_STEPS.length - 1 && (
-  <div className="relative z-10 py-2 space-y-4">
-    <div className="text-[#33ff66] font-bold animate-pulse text-xs">
-      // ENGINE READY
-    </div>
-
-    <button
-      onClick={() => {
-        synth.playSuccess();
-        router.push("/engineer-certification");
-      }}
-      className="w-full border border-[#33ff66] text-black bg-[#33ff66] font-mono font-bold text-xs tracking-widest py-3.5 hover:shadow-[0_0_12px_rgba(51,255,102,0.6)] transition-all uppercase cursor-pointer"
-    >
-      ENTER ENGINEER CERTIFICATION
-    </button>
-  </div>
-)}
+            <div className="text-[#33ff66] font-bold animate-pulse text-xs relative z-10 py-2">
+              // REDIRECTING ENGINE READY
+            </div>
+          )}
         </div>
       </BlackboxShell>
     </PageTransition>
