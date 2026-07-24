@@ -14,7 +14,7 @@ const MODULE_ROUTES: Record<number, string> = {
   7: "/final-authorization",
 };
 
-export default async function RepositoryRecoveryLayout({
+export default async function NetworkLabyrinthLayout({
   children,
 }: {
   children: ReactNode;
@@ -27,9 +27,9 @@ export default async function RepositoryRecoveryLayout({
     redirect("/authentication");
   }
 
-  if (team.currentModule !== 2) {
+  if (team.currentModule !== 3) {
     redirect(MODULE_ROUTES[team.currentModule] ?? "/authentication");
   }
 
-  return <div className="w-full h-full">{children}</div>;
+  return children;
 }

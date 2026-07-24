@@ -1,9 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { GAME_CONFIG } from "@/config/game";
-import { getAuthenticatedTeamFromToken } from "@/lib/auth/session";
 import { connectToDatabase } from "@/lib/db/mongodb";
 import { completeModule, logSubmission, unlockNextModule } from "@/engine/gameEngine";
 import { jsonError } from "@/lib/http/responses";
+import { getActiveModuleTeam } from "@/lib/modules/activeModule";
 import { generateM3Fragments } from "@/lib/modules/m3fragments";
 import { Team } from "@/models/Team";
 
@@ -22,10 +21,9 @@ const MODULE_NUMBER = 3;
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // ── Auth ──────────────────────────────────────────────────────────────────
-  const token = request.cookies.get(GAME_CONFIG.authCookieName)?.value;
-  const team = await getAuthenticatedTeamFromToken(token);
+  const auth = await getActiveModuleTeam(request, MODULE_NUMBER, "Network Labyrinth");
 
-  if (!team) return jsonError("Unauthenticated.", 401);
+  if (!auth.ok) return jsonError(auth.message, auth.status);
 
   // ── Parse body ────────────────────────────────────────────────────────────
   let body: { key?: string; fragments?: string[] };
@@ -46,7 +44,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // ── Fetch team's eventToken & generate expected key ───────────────────────
   await connectToDatabase();
-  const teamDoc = await Team.findOne({ teamId: team.teamId })
+  const teamDoc = await Team.findOne({ teamId: auth.team.teamId })
     .select("+eventToken")
     .lean<{ eventToken: string } | null>();
 
@@ -57,7 +55,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // ── Log every submission attempt ──────────────────────────────────────────
   await logSubmission({
-    teamId: team.teamId,
+    teamId: auth.team.teamId,
     module: MODULE_NUMBER,
     submittedAnswer: submitted,
     isCorrect,
@@ -72,8 +70,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // ── Correct key: complete module + unlock next ────────────────────────────
-  await completeModule(team.teamId, MODULE_NUMBER);
-  await unlockNextModule(team.teamId);
+  await completeModule(auth.team.teamId, MODULE_NUMBER);
+  await unlockNextModule(auth.team.teamId);
 
   return NextResponse.json({ valid: true, message: "Gateway Recovery Complete." });
 }
