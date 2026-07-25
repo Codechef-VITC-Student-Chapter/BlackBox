@@ -1,11 +1,35 @@
-"use client";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { GAME_CONFIG } from "@/config/game";
+import { getAuthenticatedTeamFromToken } from "@/lib/auth/session";
+import type { ReactNode } from "react";
 
-import React from "react";
+const MODULE_ROUTES: Record<number, string> = {
+  1: "/authentication",
+  2: "/repository-recovery",
+  3: "/network-labyrinth",
+  4: "/memory-reconstruction",
+  5: "/core-vault",
+  6: "/engineer-certification",
+  7: "/final-authorization",
+};
 
-export default function RepositoryRecoveryLayout({
+export default async function RepositoryRecoveryLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(GAME_CONFIG.authCookieName)?.value;
+  const team = await getAuthenticatedTeamFromToken(token);
+
+  if (!team) {
+    redirect("/authentication");
+  }
+
+  if (team.currentModule !== 2) {
+    redirect(MODULE_ROUTES[team.currentModule] ?? "/authentication");
+  }
+
   return <div className="w-full h-full">{children}</div>;
 }

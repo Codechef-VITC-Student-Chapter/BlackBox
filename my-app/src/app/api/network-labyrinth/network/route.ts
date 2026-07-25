@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { GAME_CONFIG } from "@/config/game";
-import { getAuthenticatedTeamFromToken } from "@/lib/auth/session";
 import { jsonError } from "@/lib/http/responses";
+import { getActiveModuleTeam } from "@/lib/modules/activeModule";
 
 export const runtime = "nodejs";
 
@@ -11,10 +10,9 @@ export const runtime = "nodejs";
  * Acts as a red herring / realistic network diagnostic call.
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const token = request.cookies.get(GAME_CONFIG.authCookieName)?.value;
-  const team = await getAuthenticatedTeamFromToken(token);
+  const auth = await getActiveModuleTeam(request, 3, "Network Labyrinth");
 
-  if (!team) return jsonError("Unauthenticated.", 401);
+  if (!auth.ok) return jsonError(auth.message, auth.status);
 
   return NextResponse.json(
     {

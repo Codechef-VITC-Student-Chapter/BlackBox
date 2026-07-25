@@ -31,6 +31,10 @@ const progressSchema = new Schema(
       type: Date,
       default: null,
     },
+    moduleState: {
+      type: Schema.Types.Mixed,
+      default: {},
+    },
   },
   {
     timestamps: true,

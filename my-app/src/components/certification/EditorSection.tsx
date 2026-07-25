@@ -2,53 +2,16 @@
 
 import { motion } from "framer-motion";
 import { Code2 } from "lucide-react";
-import { useState } from "react";
 import Editor from "@monaco-editor/react";
 
-export default function EditorSection() {
-  const [language, setLanguage] = useState("cpp");
-
-  const starterCode = {
-    cpp: `#include <bits/stdc++.h>
-using namespace std;
-
-int main() {
-
-    return 0;
-}`,
-
-    java: `public class Main {
-
-    public static void main(String[] args) {
-
-    }
-
-}`,
-
-    python: `def solve():
-    pass
-
-if __name__ == "__main__":
-    solve()
-`,
-
-    go: `package main
-
-import "fmt"
-
-func main() {
-
+interface EditorSectionProps {
+  language: string;
+  code: string;
+  setCode: (code: string) => void;
+  changeLanguage: (lang: string) => void;
 }
-`,
-  };
 
-  const [code, setCode] = useState(starterCode.cpp);
-
-  const changeLanguage = (lang: string) => {
-    setLanguage(lang);
-    setCode(starterCode[lang as keyof typeof starterCode]);
-  };
-
+export default function EditorSection({ language, code, setCode, changeLanguage }: EditorSectionProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

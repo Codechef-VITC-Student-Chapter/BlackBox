@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
 import { synth } from "@/utils/synthAudio";
@@ -86,7 +85,7 @@ export default function EngineerCertificationPage() {
               key={index}
               className={`text-xs ${
                 line === "SYSTEM RESTORED" ? "text-[#33ff66] font-bold text-sm" :
-                line.includes("VERIFIED") ? "text-[#33ff66]" :
+                line?.includes("VERIFIED") ? "text-[#33ff66]" :
                 line === "" ? "h-2" : "text-[#3c663a]"
               }`}
             >

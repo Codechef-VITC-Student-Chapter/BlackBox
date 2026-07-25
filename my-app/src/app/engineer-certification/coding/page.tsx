@@ -1,145 +1,375 @@
 "use client";
 
+
+
 import { useState, useEffect } from "react";
+
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+
+import { motion } from "framer-motion";
+
 import { PageTransition } from "@/components/ui/PageTransition";
+
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
+
 import { synth } from "@/utils/synthAudio";
+
 import Editor from "@monaco-editor/react";
+
 import type { LeaderboardEntry } from "@/lib/scoring/ctfd";
 
+
+
 const STATUS_CARDS: StatusCardInfo[] = [
+
   { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
+
   { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
+
   { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
+
   { title: "Visual/Puzzle", status: "COMPLETE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
+
   { title: "Core Vault", status: "COMPLETE", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
+
   { title: "Certification", status: "ACTIVE", modId: "MOD-06", serial: "SN:84-E6", iconType: "cert" },
+
 ];
 
+
+
 const STARTER_CODE = {
+
   cpp: `#include <bits/stdc++.h>
+
 using namespace std;
 
+
+
 int main() {
+
     // Write your code here
+
     return 0;
+
 }`,
+
   java: `public class Main {
+
     public static void main(String[] args) {
+
         // Write your code here
+
     }
+
 }`,
+
   python: `def solve():
+
     # Write your code here
+
     pass
 
+
+
 if __name__ == "__main__":
+
     solve()`,
+
   go: `package main
+
+
 
 import "fmt"
 
+
+
 func main() {
+
     // Write your code here
+
 }`
+
 };
 
+type Problem = {
+  _id: string;
+  title: string;
+  description: string;
+  published?: boolean;
+  cpu_time_limit: number;
+  memory_limit: number;
+};
+
+type RunResult = {
+  testcase: number | string;
+  verdict: string;
+  time?: number | string;
+  memory?: number | string;
+  passed: boolean;
+  expected?: string;
+  stdout?: string;
+  error?: string;
+  stderr?: string;
+};
+
+type SubmitResult = {
+  verdict: string;
+  total?: number;
+  passed?: number;
+  time?: number | string;
+  memory?: number | string;
+  message?: string;
+  error?: string;
+};
+
+type CodingTab = "problem" | "editor" | "leaderboard";
+
+const TABS: { id: CodingTab; label: string }[] = [
+  { id: "problem", label: "PROBLEM STATEMENT" },
+  { id: "editor", label: "CODE SANDBOX" },
+  { id: "leaderboard", label: "LEADERBOARD" },
+];
+
+const getErrorMessage = (err: unknown) => (
+  err instanceof Error ? err.message : "Unexpected error"
+);
+
+
+
 export default function CodingPage() {
+
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"problem" | "editor" | "leaderboard">("problem");
+
+  const [activeTab, setActiveTab] = useState<CodingTab>("problem");
+
+  // Problem state
+  const [problem, setProblem] = useState<Problem | null>(null);
 
   // Editor states
+
   const [language, setLanguage] = useState("cpp");
+
   const [code, setCode] = useState(STARTER_CODE.cpp);
+
   const [consoleLogs, setConsoleLogs] = useState<string[]>([
+
     "BLACKBOX Judge Ready.",
+
     "Awaiting code execution..."
+
   ]);
+
   const [isRunning, setIsRunning] = useState(false);
 
+
+
   // Leaderboard states
+
   const [timeLeft, setTimeLeft] = useState(45 * 60);
+
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
-  // Timer countdown
+  // Fetch first published problem
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
+    fetch("/api/admin/problems")
+      .then(res => res.json())
+      .then((data: Problem[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const firstProb = data.find((p) => p.published) || data[0];
+          setProblem(firstProb);
+        }
+      })
+      .catch(console.error);
   }, []);
+
+  // Timer countdown
+
+  useEffect(() => {
+
+    const timer = setInterval(() => {
+
+      setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
+
+    }, 1000);
+
+    return () => clearInterval(timer);
+
+  }, []);
+
+
 
   // Fetch leaderboard
+
   useEffect(() => {
+
     let isMounted = true;
+
     async function fetchLeaderboard() {
+
       try {
+
         const res = await fetch("/api/leaderboard");
+
         if (res.ok) {
+
           const data = await res.json();
+
           if (isMounted && Array.isArray(data.leaderboard)) {
+
             setLeaderboard(data.leaderboard);
+
           }
+
         }
+
       } catch (err) {
+
         console.error("Leaderboard fetch error:", err);
+
       } finally {
+
         if (isMounted) setLeaderboardLoading(false);
+
       }
+
     }
+
     fetchLeaderboard();
+
     const interval = setInterval(fetchLeaderboard, 15000);
+
     return () => {
+
       isMounted = false;
+
       clearInterval(interval);
+
     };
+
   }, []);
 
+
+
   const changeLanguage = (lang: string) => {
+
     synth.playClick();
+
     setLanguage(lang);
+
     setCode(STARTER_CODE[lang as keyof typeof STARTER_CODE]);
+
   };
 
-  const handleRunCode = () => {
+  const mapLangToId = (lang: string) => {
+    switch (lang) {
+      case "cpp": return 54;
+      case "java": return 62;
+      case "python": return 71;
+      case "go": return 60;
+      default: return 54;
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleRunCode = async () => {
+    if (!problem) return;
     synth.playClick();
+
     setIsRunning(true);
-    setConsoleLogs([
-      "Compiling source code...",
-      "Executing sample test cases...",
-      "SUCCESS: Sample test cases passed [Execution Time: 42ms]"
-    ]);
-    setTimeout(() => {
+    setConsoleLogs(["Compiling source code...", "Executing public test cases..."]);
+    
+    try {
+      const res = await fetch("/api/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problem_id: problem._id,
+          language_id: mapLangToId(language),
+          source_code: code,
+        })
+      });
+      
+      const data = await res.json() as RunResult[] | { error?: string };
+      if (!res.ok) {
+        throw new Error(Array.isArray(data) ? "Execution failed" : data.error || "Execution failed");
+      }
+      
+      const logs = ["Execution Completed!"];
+      if (!Array.isArray(data)) throw new Error("Execution failed");
+
+      data.forEach((tc) => {
+        logs.push(`Testcase #${tc.testcase}: ${tc.verdict} [${tc.time || 0}s, ${tc.memory || 0}KB]`);
+        if (!tc.passed) {
+          logs.push(`  Expected: ${tc.expected || "hidden"}`);
+          logs.push(`  Got:      ${tc.stdout?.trim() || tc.error || tc.stderr || "Empty output"}`);
+        }
+      });
+      
+      setConsoleLogs(logs);
       synth.playSuccess();
+    } catch (err: unknown) {
+      setConsoleLogs(["> ERROR: " + getErrorMessage(err)]);
+    } finally {
       setIsRunning(false);
-    }, 1200);
+    }
   };
 
-  const handleSubmitCode = () => {
+  const handleSubmitCode = async () => {
+    if (!problem) return;
     synth.playClick();
+
     setIsRunning(true);
+
     setConsoleLogs([
       "Compiling source code...",
       "Submitting to BLACKBOX grading queue...",
-      "Evaluating hidden test cases [01/15]...",
-      "Evaluating hidden test cases [15/15]...",
-      "GRADING COMPLETED. Rerouting to verdict console..."
+      "Evaluating all hidden test cases..."
     ]);
-    setTimeout(() => {
-      synth.playSuccess();
-      router.push("/engineer-certification/verdict");
-    }, 2500);
+    
+    try {
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          problem_id: problem._id,
+          language_id: mapLangToId(language),
+          source_code: code,
+        })
+      });
+      
+      const data = await res.json() as SubmitResult;
+      if (!res.ok) throw new Error(data.error || "Submission failed");
+      
+      if (data.verdict === "Accepted") {
+        synth.playSuccess();
+        setConsoleLogs([
+          "GRADING COMPLETED.",
+          `SUCCESS: ALL ${data.total} TESTCASES PASSED!`,
+          `Time: ${data.time}s | Memory: ${data.memory}KB`,
+          "Rerouting to verdict console..."
+        ]);
+        setTimeout(() => router.push("/engineer-certification/verdict"), 2500);
+      } else {
+        setConsoleLogs([
+          "GRADING COMPLETED.",
+          `FAILED: ${data.message}`,
+          `Passed: ${data.passed} / ${data.total}`
+        ]);
+      }
+    } catch (err: unknown) {
+      setConsoleLogs(["> ERROR: " + getErrorMessage(err)]);
+    } finally {
+      setIsRunning(false);
+    }
   };
-
-  const formatTime = (timeSec: number) => {
-    const minutes = Math.floor(timeSec / 60);
-    const seconds = timeSec % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  };
-
   return (
     <PageTransition>
       <BlackboxShell
@@ -173,26 +403,24 @@ export default function CodingPage() {
         <div className="flex-1 flex flex-col justify-between overflow-hidden">
           {/* Tab selectors */}
           <div className="flex items-center gap-1.5 border-b border-[#1a2d1d] pb-2 mb-3 select-none flex-shrink-0">
-            {[
-              { id: "problem", label: "PROBLEM STATEMENT" },
-              { id: "editor", label: "CODE SANDBOX" },
-              { id: "leaderboard", label: `LEADERBOARD [${formatTime(timeLeft)}]` }
-            ].map(tab => (
+            {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => {
                   synth.playClick();
-                  setActiveTab(tab.id as any);
+                  setActiveTab(tab.id);
                 }}
-                className={`border font-mono text-[10px] px-3 py-1 font-bold transition-all duration-200 cursor-pointer ${
-                  activeTab === tab.id
+                className={`border font-mono text-[10px] px-3 py-1 font-bold transition-all duration-200 cursor-pointer ${activeTab === tab.id
                     ? "border-[#33ff66] text-black bg-[#33ff66]"
                     : "border-[#1a2d1d] text-[#3c663a] bg-[#020502] hover:text-[#33ff66] hover:border-[#33ff66]/40"
-                }`}
+                  }`}
               >
-                {tab.label}
+                {tab.id === "leaderboard" ? `${tab.label} [${formatTime(timeLeft)}]` : tab.label}
               </button>
             ))}
+
+
+
           </div>
 
           {/* Tab Content Areas */}
@@ -204,76 +432,31 @@ export default function CodingPage() {
                 className="space-y-4 font-mono text-xs text-[#3c663a] leading-relaxed pr-2"
               >
                 <div className="border border-[#1a2d1d] bg-[#040e04] rounded-md p-4 space-y-4">
-                  <div>
-                    <h2 className="text-white text-sm font-bold uppercase tracking-wider mb-1">
-                      Corrupted Network Nodes
-                    </h2>
-                    <p className="text-[#3c663a]">
-                      During the recovery of the BLACKBOX infrastructure, several communication nodes became corrupted. Your task is to determine the minimum recovery operations required to reconnect the system.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-[#33ff66] font-bold uppercase tracking-wide mb-1">
-                      Problem Statement
-                    </h3>
-                    <p className="text-[#3c663a]">
-                      You are given a graph consisting of <span className="text-[#33ff66] font-bold">N</span> nodes and <span className="text-[#33ff66] font-bold">M</span> edges. Every edge connects two different nodes.
-                      <br /><br />
-                      Find the minimum number of operations required to reconnect every node so that the entire network becomes connected.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-[#33ff66] font-bold uppercase tracking-wide mb-1">
-                      Input Format
-                    </h3>
-                    <ul className="list-disc ml-5 space-y-0.5 text-[#3c663a]">
-                      <li>First line contains N and M.</li>
-                      <li>Next M lines contain two integers U and V.</li>
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="text-[#33ff66] font-bold uppercase tracking-wide mb-1">
-                      Output Format
-                    </h3>
-                    <p className="text-[#3c663a]">
-                      Print one integer — the minimum operations required.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="text-[#33ff66] font-bold uppercase tracking-wide mb-1">
-                      Constraints
-                    </h3>
-                    <div className="bg-[#030703] border border-[#1a2d1d] p-3 text-[10px] space-y-0.5">
-                      <p>1 ≤ N ≤ 2 × 10⁵</p>
-                      <p>0 ≤ M ≤ 2 × 10⁵</p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-[#33ff66] font-bold uppercase tracking-wide mb-1">
-                      Sample Data
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3 text-[10px]">
+                  {problem ? (
+                    <>
                       <div>
-                        <span className="text-[#3c663a] font-bold block mb-1">SAMPLE INPUT</span>
-                        <pre className="bg-[#030703] border border-[#1a2d1d] p-2 text-[#33ff66]">
-{`4 2
-1 2
-3 4`}
-                        </pre>
+                        <h2 className="text-white text-sm font-bold uppercase tracking-wider mb-1">
+                          {problem.title}
+                        </h2>
+                        <div 
+                          className="text-[#3c663a] whitespace-pre-wrap"
+                          dangerouslySetInnerHTML={{ __html: problem.description }}
+                        />
                       </div>
+
                       <div>
-                        <span className="text-[#3c663a] font-bold block mb-1">SAMPLE OUTPUT</span>
-                        <pre className="bg-[#030703] border border-[#1a2d1d] p-2 text-[#33ff66]">
-{`1`}
-                        </pre>
+                        <h3 className="text-[#33ff66] font-bold uppercase tracking-wide mb-1">
+                          Constraints
+                        </h3>
+                        <div className="bg-[#030703] border border-[#1a2d1d] p-3 text-[10px] space-y-0.5">
+                          <p>CPU Limit: {problem.cpu_time_limit}s</p>
+                          <p>Memory Limit: {problem.memory_limit} KB</p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    </>
+                  ) : (
+                    <div>Loading problem data...</div>
+                  )}
                 </div>
               </motion.div>
             )}
@@ -358,7 +541,7 @@ export default function CodingPage() {
               >
                 <div className="bg-[#040e04] border border-[#1a2d1d] rounded-md p-4 space-y-4">
                   <div className="flex justify-between items-center border-b border-[#1a2d1d] pb-2">
-                    <span className="font-bold uppercase tracking-wider">// PLATFORM STANDINGS</span>
+                    <span className="font-bold uppercase tracking-wider">{"// PLATFORM STANDINGS"}</span>
                     {leaderboardLoading && <span className="animate-pulse">POLLING GATEWAY...</span>}
                   </div>
 

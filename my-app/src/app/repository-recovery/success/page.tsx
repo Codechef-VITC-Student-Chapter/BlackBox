@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
@@ -55,7 +55,13 @@ export default function ReconstructSuccess() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [router]);
+
+  useEffect(() => {
+    if (countdown === 0) {
+      router.push("/repository-recovery/verify");
+    }
+  }, [countdown, router]);
 
 
   return (
@@ -161,7 +167,7 @@ export default function ReconstructSuccess() {
             <button
               onClick={() => {
                 synth.playClick();
-                router.push("/network-labyrinth");
+                router.push("/repository-recovery/verify");
               }}
               className="w-full border border-[#33ff66] text-black bg-[#33ff66] hover:shadow-[0_0_12px_rgba(51,255,102,0.6)] py-3 px-8 font-mono font-bold tracking-widest rounded-none transition-all duration-300 uppercase cursor-pointer text-xs"
             >
