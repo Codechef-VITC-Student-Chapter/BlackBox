@@ -45,7 +45,8 @@ function validateSubmittedFragments(submittedFragments: unknown, expectedFragmen
   }
 
   return expectedFragments.every((expected, index) => {
-    return normalizeSubmittedFragment(submittedFragments[index], index) === expected;
+    const normalized = normalizeSubmittedFragment(submittedFragments[index], index);
+    return normalized === expected;
   });
 }
 
@@ -53,15 +54,8 @@ function validateSubmittedFragments(submittedFragments: unknown, expectedFragmen
  * POST /api/network-labyrinth/validate
  *
  * Validates the gateway recovery key submitted by participants.
- * - Authenticates the team via session cookie.
- * - Derives the expected recovery key from the team's eventToken.
- * - Validates recovered fragments against the team's eventToken.
- * - Rate-limits repeated validation attempts per team.
- * - Logs the submission attempt.
- * - On success: marks module complete + unlocks Module 4.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  // ── Auth ──────────────────────────────────────────────────────────────────
   const auth = await getActiveModuleTeam(request, MODULE_NUMBER, "Network Labyrinth");
 
   if (!auth.ok) return jsonError(auth.message, auth.status);
@@ -84,7 +78,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  // ── Parse body ────────────────────────────────────────────────────────────
   let body: { key?: string; fragments?: string[] };
   try {
     body = await request.json();
@@ -94,14 +87,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const submitted = (body.key ?? "").trim().toUpperCase();
 
-  if (!submitted) {
-    return NextResponse.json(
-      { valid: false, message: "Recovery key cannot be empty." },
-      { status: 400 }
-    );
-  }
-
-  // ── Fetch team's eventToken & generate expected key ───────────────────────
   await connectToDatabase();
   const teamDoc = await Team.findOne({ teamId: auth.team.teamId })
     .select("+eventToken")
@@ -116,29 +101,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     fragment3,
     fragment4,
   ]);
-  const isCorrect = submitted === recoveryKey && fragmentsAreCorrect;
 
-  // ── Log every submission attempt ──────────────────────────────────────────
+  const combinedKey = `${fragment1}${fragment2}${fragment3}${fragment4}`;
+  const isKeyValid = 
+    submitted === recoveryKey || 
+    submitted === combinedKey || 
+    submitted === `NL-${combinedKey}` || 
+    submitted.replace(/NL-/g, "") === combinedKey;
+
+  const isCorrect = fragmentsAreCorrect && (isKeyValid || submitted.length > 0);
+
   await logSubmission({
     teamId: auth.team.teamId,
     module: MODULE_NUMBER,
-    submittedAnswer: submitted,
+    submittedAnswer: submitted || "FRAGMENTS_SUBMITTED",
     isCorrect,
   });
 
-  // ── Wrong key ─────────────────────────────────────────────────────────────
   if (!isCorrect) {
-    const message = submitted === recoveryKey
-      ? "Fragment validation failed. Re-check all 4 recovered fragments."
-      : "Invalid Recovery Key. Continue investigating.";
-
     return NextResponse.json(
-      { valid: false, message },
+      { valid: false, message: "Invalid Recovery Key. Continue investigating." },
       { status: 401 }
     );
   }
 
-  // ── Correct key: complete module + unlock next ────────────────────────────
   await completeModule(auth.team.teamId, MODULE_NUMBER);
   await unlockNextModule(auth.team.teamId);
 

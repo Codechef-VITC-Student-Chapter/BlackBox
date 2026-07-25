@@ -1,6 +1,6 @@
 export const REPOSITORY_RECOVERY_CHALLENGE = {
   moduleNumber: 2,
-  owner: "ishani2026",
+  owner: "ishani2025",
   repository: "bLaCKbOXX_C_C",
   recoveryKey: "imanmay2",
   nextModule: 3,
