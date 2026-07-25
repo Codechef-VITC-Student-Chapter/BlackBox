@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { synth } from "@/utils/synthAudio";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const DEFAULT_IMAGE_SRC = "/images/logo.png";
+type PuzzleBoardProps = {
+  imageSrc: string;
+  gridSize?: number;
+  onSolved: () => void;
+};
 
 function buildSolvedTiles(total: number) {
   return Array.from({ length: total }, (_, i) => i);
@@ -40,26 +42,67 @@ function shuffleTiles(size: number): number[] {
   return tiles;
 }
 
-export default function PuzzleBoard() {
-  const router = useRouter();
-  const gridSize = 5;
-  const imageSrc = DEFAULT_IMAGE_SRC;
+export default function PuzzleBoard({ imageSrc, gridSize = 5, onSolved }: PuzzleBoardProps) {
   const total = gridSize * gridSize;
-  const [tiles, setTiles] = useState<number[]>(() => buildSolvedTiles(total));
+  const [tiles, setTiles] = useState<number[]>(() => shuffleTiles(gridSize));
   const [moves, setMoves] = useState(0);
-  const [solving, setSolving] = useState(false);
+
+  const [fingerprints, setFingerprints] = useState<string[]>([]);
+  const solvedRef = useRef(false);
 
   useEffect(() => {
-    setTiles(shuffleTiles(gridSize));
-  }, [gridSize]);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = imageSrc;
+    img.onload = () => {
+      const sample = 8;
+      const canvas = document.createElement("canvas");
+      canvas.width = gridSize * sample;
+      canvas.height = gridSize * sample;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      const fps: string[] = [];
+      for (let value = 0; value < total; value++) {
+        if (value === total - 1) {
+          fps.push("BLANK");
+          continue;
+        }
+        const r = Math.floor(value / gridSize);
+        const c = value % gridSize;
+        const data = ctx.getImageData(c * sample, r * sample, sample, sample).data;
+        let fp = "";
+        for (let i = 0; i < data.length; i += 4) {
+          fp += (((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4)).toString(16);
+        }
+        fps.push(fp);
+      }
+      setFingerprints(fps);
+    };
+  }, [imageSrc, gridSize, total]);
 
   const blankIndex = tiles.indexOf(total - 1);
-  const isSolved = tiles.every((value, index) => value === index);
   const tileSize = 100 / gridSize;
 
+  const checkSolved = useCallback(
+    (arrangement: number[]) => {
+      return arrangement.every((value, index) => {
+        if (value === index) return true;
+        if (fingerprints.length === total) {
+          return fingerprints[value] === fingerprints[index] && fingerprints[index] !== "BLANK";
+        }
+        return false;
+      });
+    },
+    [fingerprints, total]
+  );
+
+  const isSolved = checkSolved(tiles);
+
   const handleTileClick = useCallback(
-    async (index: number) => {
-      if (isSolved || solving) return;
+    (index: number) => {
+      if (isSolved) return;
       const neighbors = getNeighbors(blankIndex, gridSize);
       if (!neighbors.includes(index)) return;
 
@@ -67,31 +110,13 @@ export default function PuzzleBoard() {
       [next[blankIndex], next[index]] = [next[index], next[blankIndex]];
       setTiles(next);
       setMoves((m) => m + 1);
-      synth.playClick();
 
-      // Check if solved after the move
-      const newlySolved = next.every((value, idx) => value === idx);
-      if (newlySolved) {
-        setSolving(true);
-        synth.playSuccess();
-        try {
-          const res = await fetch("/api/codechef-puzzle/complete", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" }
-          });
-          const data = await res.json();
-          if (data.encryptedKey) {
-            sessionStorage.setItem("bbx_encrypted_key", data.encryptedKey);
-          }
-        } catch (err) {
-          console.error("Failed to complete puzzle api call:", err);
-        }
-        setTimeout(() => {
-          router.push("/codechef-puzzle/success");
-        }, 1500);
+      if (!solvedRef.current && checkSolved(next)) {
+        solvedRef.current = true;
+        onSolved();
       }
     },
-    [tiles, blankIndex, gridSize, isSolved, solving, router]
+    [tiles, blankIndex, gridSize, isSolved, onSolved, checkSolved]
   );
 
   const positions = useMemo(() => {
@@ -106,26 +131,26 @@ export default function PuzzleBoard() {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-3 select-none">
-        <div className="flex items-center gap-2 px-4 py-1.5 glass-panel border border-[#1a4a16] bg-[#040804]/90">
-          <span className="text-[#33ff66] text-[10px] font-bold tracking-wider">MOVES</span>
-          <span className="text-[#33ff66] text-xs font-bold">{moves}</span>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-cyan-500/40 shadow-[0_3px_0_rgba(0,0,0,0.6)]">
+          <span className="text-cyan-400 text-xs font-bold tracking-wider">MOVES</span>
+          <span className="text-white text-sm font-bold">{moves}</span>
         </div>
         <div
-          className={`px-4 py-1.5 border text-[10px] font-bold tracking-wider cursor-default select-none ${
+          className={`px-4 py-1.5 rounded-full border-2 shadow-[0_3px_0_rgba(0,0,0,0.6)] text-xs font-bold tracking-wider ${
             isSolved
-              ? "bg-[#0c1e0b] border-[#33ff66] text-[#33ff66]"
-              : "bg-[#3a0c0e] border-[#ff3333] text-[#ff3333]"
+              ? "bg-gradient-to-b from-cyan-400 to-cyan-600 border-cyan-200 text-black"
+              : "bg-gradient-to-b from-amber-500 to-amber-700 border-amber-300 text-black"
           }`}
         >
           {isSolved ? "RESTORED" : "CORRUPTED"}
         </div>
       </div>
 
-      <div className="relative p-[2px] bg-[#1a4a16] border border-[#1a4a16] shadow-[0_0_15px_rgba(51,255,102,0.1)]">
+      <div className="relative p-[4px] rounded-2xl bg-gradient-to-b from-cyan-400 via-cyan-600 to-cyan-900 shadow-[0_6px_0_rgba(21,94,117,1),0_0_45px_rgba(34,211,238,0.35)]">
         <div
-          className="relative bg-[#030703] overflow-hidden"
-          style={{ width: "min(88vw, 320px)", aspectRatio: "1 / 1" }}
+          className="relative bg-[#0a0e17] rounded-[14px] overflow-hidden"
+          style={{ width: "min(92vw, 480px)", aspectRatio: "1 / 1" }}
         >
           {positions.map(({ value, posRow, posCol, srcRow, srcCol, index }) => {
             const isBlank = value === total - 1;
@@ -139,11 +164,11 @@ export default function PuzzleBoard() {
                     width: `${tileSize}%`,
                     height: `${tileSize}%`,
                     transform: `translate(${posCol * 100}%, ${posRow * 100}%)`,
-                    padding: "2px",
+                    padding: "1.5px",
                   }}
                 >
-                  <div className="w-full h-full border border-dashed border-[#ff3333]/80 bg-black/70 flex items-center justify-center animate-pulse">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#ff3333] shadow-[0_0_8px_rgba(255,51,51,0.8)]" />
+                  <div className="w-full h-full rounded-sm border border-dashed border-red-500/70 bg-black/60 shadow-[0_0_14px_rgba(239,68,68,0.4),inset_0_2px_6px_rgba(0,0,0,0.8)] flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_12px_rgba(239,68,68,1)] animate-pulse" />
                   </div>
                 </div>
               );
@@ -153,17 +178,17 @@ export default function PuzzleBoard() {
               <button
                 key={value}
                 onClick={() => handleTileClick(index)}
-                disabled={isSolved || solving}
-                className="absolute transition-transform duration-300 ease-out active:translate-y-[1px] cursor-pointer"
+                disabled={isSolved}
+                className="absolute transition-transform duration-300 ease-out active:translate-y-[1px]"
                 style={{
                   width: `${tileSize}%`,
                   height: `${tileSize}%`,
                   transform: `translate(${posCol * 100}%, ${posRow * 100}%)`,
-                  padding: "2px",
+                  padding: "1.5px",
                 }}
               >
                 <div
-                  className="w-full h-full border border-[#1a4a16] overflow-hidden hover:brightness-110"
+                  className="w-full h-full rounded-sm border border-cyan-500/60 overflow-hidden shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),inset_0_-2px_5px_rgba(0,0,0,0.55),0_2px_4px_rgba(0,0,0,0.5)] hover:brightness-110"
                   style={{
                     backgroundImage: `url(${imageSrc})`,
                     backgroundSize: `${gridSize * 100}% ${gridSize * 100}%`,
