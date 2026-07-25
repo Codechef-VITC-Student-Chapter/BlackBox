@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
 import { synth } from "@/utils/synthAudio";
@@ -137,8 +136,6 @@ export default function RecoveredEvidenceLocker() {
   const [downloadedState, setDownloadedState] = useState<Record<string, boolean>>({
     backup: false,
     server: false,
-    voice: false,
-    recovery: false
   });
 
   const handleDownloaded = (key: string) => {
@@ -171,9 +168,9 @@ export default function RecoveredEvidenceLocker() {
         directiveTitle="CLASSIFIED DIRECTIVE // RECOVERY LOCKER"
         directiveText={
           <>
-            The archive contains fragments of what was lost. Download and inspect every artifact. Check signatures, contents, and logs.
+            The archive contains fragments of what was lost. Download and inspect every artifact. Check signatures and file contents.
             <br />
-            Verify the evidence layout fully.
+            Let CyberChef do the cooking. Verify the evidence layout fully.
           </>
         }
         statusLabel="SYSTEM STATUS"
@@ -193,7 +190,7 @@ export default function RecoveredEvidenceLocker() {
               RECOVERED EVIDENCE LOCKER
             </h1>
             <p className="text-[#3c663a] text-xs mt-1 leading-relaxed max-w-2xl">
-              Analyze the recovered files to extract the missing repository details. Download all 4 files to unlock the reconstruction terminal.
+              Analyze the recovered files to extract the missing repository details. CyberChef is cooking... Download both files to unlock the reconstruction terminal.
             </p>
           </div>
 
@@ -204,7 +201,7 @@ export default function RecoveredEvidenceLocker() {
               size="12 B"
               name="backup.bin"
               desc="Recovered binary archive. Contains corrupted sector snapshots."
-              hint='"XOR operation reveals the path. Key: 0x5A"'
+              hint='"XOR operation reveals the path. Key: 0x5A (CyberChef is cooking...)"'
               url="/downloads/backup.bin"
               onDownloaded={handleDownloaded}
             />
@@ -214,28 +211,8 @@ export default function RecoveredEvidenceLocker() {
               size="1.06 MB"
               name="server_room.png"
               desc="High resolution snapshot of primary node rack prior to system failure."
-              hint='"The end of the image holds secrets. Decryption: ROT13."'
+              hint='"The end of the image holds secrets. Decryption: ROT13. CyberChef is cooking..."'
               url="/images/server_room.png"
-              onDownloaded={handleDownloaded}
-            />
-            <EvidenceFileCard 
-              id="FILE_03"
-              fileKey="voice"
-              size="102 B"
-              name="voice.log"
-              desc="Transcribed audio transmission containing distress frequency pulses."
-              hint='"Telemetry burst capture. Burst duration: 300ms is Dash, 100ms is Dot."'
-              url="/downloads/voice.log"
-              onDownloaded={handleDownloaded}
-            />
-            <EvidenceFileCard 
-              id="FILE_04"
-              fileKey="recovery"
-              size="144 B"
-              name="recovery.log"
-              desc="Diagnostic readout log retrieved from emergency restore partition."
-              hint='"The first letter of each system event contains the final segment."'
-              url="/downloads/recovery.log"
               onDownloaded={handleDownloaded}
             />
           </div>

@@ -57,25 +57,23 @@ export default function RepositoryRecoveryLanding() {
       >
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3 relative z-10">
           <div className="text-[10px] text-[#264c23] uppercase tracking-widest border-b border-[#112211] pb-2 mb-2">
-            // RECOVERY STAGES — SELECT NODE TO PROCEED
+            // RECOVERY SEQUENCE — SELECT ENTRY NODE TO PROCEED
           </div>
           {[
-            { id: "01", label: "EVIDENCE LOCKER", route: "/repository-recovery/evidence", desc: "Download recovery artifacts" },
-            { id: "02", label: "GIT RECOVERY", route: "/repository-recovery/recover", desc: "Locate corrupted repository" },
-            { id: "03", label: "QR SCAN", route: "/repository-recovery/scan", desc: "Calibrate sensor array" },
-            { id: "04", label: "KEY VERIFY", route: "/repository-recovery/verify", desc: "Submit recovery signature" },
+            { id: "01", label: "START SENSOR SCAN (QR)", route: "/repository-recovery/scan", desc: "Begin optical sensor calibration & forensic scan sequence" },
+            { id: "02", label: "KEY VERIFY PORTAL", route: "/repository-recovery/verify", desc: "Submit final repository recovery signature key" },
           ].map(stage => (
             <motion.a
               key={stage.id}
               href={stage.route}
               whileHover={{ x: 4 }}
-              className="flex items-center justify-between p-3 border border-[#1a3a16] bg-[#040e04] hover:border-[#33ff66]/50 hover:bg-[#061006] transition-all duration-200 group cursor-pointer"
+              className="flex items-center justify-between p-4 border border-[#1a3a16] bg-[#040e04] hover:border-[#33ff66]/50 hover:bg-[#061006] transition-all duration-200 group cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <span className="text-[#264c23] text-[10px]">[{stage.id}]</span>
                 <div>
                   <div className="text-[#33ff66] text-xs font-bold tracking-wider group-hover:drop-shadow-[0_0_4px_rgba(51,255,102,0.8)]">{stage.label}</div>
-                  <div className="text-[#3c663a] text-[10px]">{stage.desc}</div>
+                  <div className="text-[#3c663a] text-[10px] mt-0.5">{stage.desc}</div>
                 </div>
               </div>
               <span className="text-[#33ff66]/40 group-hover:text-[#33ff66] text-xs">&gt;&gt;</span>
