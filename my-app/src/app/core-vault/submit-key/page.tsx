@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
 import { synth } from "@/utils/synthAudio";
@@ -49,11 +48,36 @@ export default function CoreRecoveryPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     synth.playClick();
-    synth.playSuccess();
-    router.push("/core-vault/success");
+
+    try {
+      const response = await fetch("/api/core-vault", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ masterKey }),
+      });
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        synth.playSuccess();
+        router.push("/core-vault/success");
+        return;
+      }
+
+      synth.playError();
+      setTerminalLines((prev) => [
+        ...prev,
+        result.message ?? "CRITICAL MISALIGNMENT: Integrity Check Failed.",
+      ]);
+    } catch {
+      synth.playError();
+      setTerminalLines((prev) => [
+        ...prev,
+        "Server error processing request!",
+      ]);
+    }
   };
 
   return (
@@ -108,7 +132,7 @@ export default function CoreRecoveryPage() {
         <div className="flex-1 overflow-y-auto flex flex-col justify-between">
           <div className="space-y-4">
             <div className="text-[10px] text-[#3c663a] uppercase tracking-widest border-b border-[#112211] pb-1.5 mb-2 font-bold select-none">
-              // INPUT OVERRIDE CREDENTIALS
+              {"// INPUT OVERRIDE CREDENTIALS"}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
