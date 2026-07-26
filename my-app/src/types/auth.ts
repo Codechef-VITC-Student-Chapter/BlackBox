@@ -10,4 +10,10 @@ export type AuthenticatedTeam = {
   teamName: string;
   currentModule: number;
   score: number;
+  module2Data?: {
+    recoveryKey?: string | null;
+  };
+  module3Data?: {
+    recoveryKey?: string | null;
+  };
 };

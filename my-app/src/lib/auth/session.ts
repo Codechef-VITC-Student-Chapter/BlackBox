@@ -19,7 +19,7 @@ export async function getAuthenticatedTeamSessionFromToken(
   await connectToDatabase();
 
   const team = await Team.findOne({ teamId: payload.teamId })
-    .select("teamId teamName currentModule score")
+    .select("teamId teamName currentModule score module2Data.recoveryKey module3Data.recoveryKey")
     .lean<AuthenticatedTeam | null>();
 
   if (!team) {

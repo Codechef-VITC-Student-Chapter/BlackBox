@@ -3,6 +3,7 @@ import { REPOSITORY_RECOVERY_CHALLENGE } from "@/config/moduleChallenges";
 import { completeModule, logSubmission, unlockNextModule } from "@/engine/gameEngine";
 import { jsonError } from "@/lib/http/responses";
 import { getActiveRepositoryRecoveryTeam, getRepositoryRecoveryState } from "@/lib/modules/repositoryRecovery";
+import { Team } from "@/models/Team";
 import { parseRecoveryKeyInput } from "@/validators/repositoryRecovery";
 
 export const runtime = "nodejs";
@@ -44,6 +45,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
 
     if (isCorrect) {
+      await Team.updateOne(
+        { teamId: auth.team.teamId },
+        { $set: { "module2Data.recoveryKey": REPOSITORY_RECOVERY_CHALLENGE.recoveryKey } },
+      );
       await completeModule(auth.team.teamId, REPOSITORY_RECOVERY_CHALLENGE.moduleNumber);
       const nextModule = await unlockNextModule(auth.team.teamId);
 
