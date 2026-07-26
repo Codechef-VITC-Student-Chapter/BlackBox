@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
 import { synth } from "@/utils/synthAudio";
@@ -28,11 +27,6 @@ export default function CoreVaultPage() {
   const router = useRouter();
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
 
-  // Keep the input focused automatically
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -51,28 +45,6 @@ export default function CoreVaultPage() {
 
     return () => clearInterval(interval);
   }, []);
-
-  // NEW: Handle user typing and hitting Enter
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (!command.trim()) return;
-
-      if (command.toLowerCase() === "recover") {
-        // If they type 'recover', route them just like the button!
-        router.push("/core-vault/submit-key");
-      } else {
-        // Otherwise, echo their command and show an error
-        setTerminalLines((prev) => [
-          ...prev, 
-          command, 
-          "ERR: Command not recognized. Try 'recover'."
-        ]);
-        setCommand("");
-        playSound("error"); // Optional: play error sound if you have one
-      }
-    }
-  };
 
   return (
     <PageTransition>
@@ -124,7 +96,7 @@ export default function CoreVaultPage() {
         <div className="flex-1 overflow-y-auto flex flex-col justify-between">
           <div className="space-y-4">
             <div className="text-[10px] text-[#264c23] uppercase tracking-widest border-b border-[#112211] pb-1.5 mb-2 font-bold select-none">
-              // RECOVERED MODULES INTEGRITY STATUS
+              {"// RECOVERED MODULES INTEGRITY STATUS"}
             </div>
 
             <div className="divide-y divide-[#122414] border border-[#1a2d1d] bg-[#040e04] rounded-md">

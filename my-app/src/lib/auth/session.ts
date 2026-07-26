@@ -1,17 +1,19 @@
 import { connectToDatabase } from "@/lib/db/mongodb";
 import { Team } from "@/models/Team";
 import { verifyAuthToken } from "@/lib/auth/jwt";
-import type { AuthenticatedTeam } from "@/types/auth";
+import type { AuthenticatedTeam, AuthTokenPayload } from "@/types/auth";
 
-export async function getAuthenticatedTeamFromToken(token?: string): Promise<AuthenticatedTeam | null> {
-  if (!token) {
-    return null;
-  }
+export type AuthenticatedTeamSessionResult =
+  | { ok: true; payload: AuthTokenPayload; team: AuthenticatedTeam }
+  | { ok: false; reason: "invalid-token" | "team-not-found" };
 
+export async function getAuthenticatedTeamSessionFromToken(
+  token: string,
+): Promise<AuthenticatedTeamSessionResult> {
   const payload = await verifyAuthToken(token);
 
   if (!payload) {
-    return null;
+    return { ok: false, reason: "invalid-token" };
   }
 
   await connectToDatabase();
@@ -20,5 +22,19 @@ export async function getAuthenticatedTeamFromToken(token?: string): Promise<Aut
     .select("teamId teamName currentModule score")
     .lean<AuthenticatedTeam | null>();
 
-  return team;
+  if (!team) {
+    return { ok: false, reason: "team-not-found" };
+  }
+
+  return { ok: true, payload, team };
+}
+
+export async function getAuthenticatedTeamFromToken(token?: string): Promise<AuthenticatedTeam | null> {
+  if (!token) {
+    return null;
+  }
+
+  const session = await getAuthenticatedTeamSessionFromToken(token);
+
+  return session.ok ? session.team : null;
 }
