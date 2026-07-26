@@ -35,7 +35,7 @@ export default function RecoveryCompletePage() {
   return (
     <PageTransition>
       <BlackboxShell
-        moduleCode="MOD-06"
+        moduleCode="MOD-07"
         exeName="SYSTEM_RECOVERY.EXE"
         terminalLabel="STAGE 6 COMPLETE"
         maintenanceSeal="#4096"

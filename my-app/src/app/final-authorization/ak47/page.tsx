@@ -39,7 +39,7 @@ export default function ak47() {
   return (
     <PageTransition>
       <BlackboxShell
-        moduleCode="MOD-07"
+        moduleCode="MOD-06"
         exeName="WEAPON_SYSTEM.EXE"
         terminalLabel="VT-100 WEAPON SYSTEM DIAGNOSTIC"
         maintenanceSeal="#4097"

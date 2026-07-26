@@ -40,7 +40,7 @@ export default function VerdictPage() {
   return (
     <PageTransition>
       <BlackboxShell
-        moduleCode="MOD-06"
+        moduleCode="MOD-07"
         exeName="SUBMISSION_VERDICT.EXE"
         terminalLabel="ASSESSMENT STATUS"
         maintenanceSeal="#4096"

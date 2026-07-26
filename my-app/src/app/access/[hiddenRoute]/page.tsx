@@ -18,8 +18,8 @@ const MODULE_ROUTES: Record<number, string> = {
   3: "/network-labyrinth",
   4: "/codechef-puzzle",
   5: "/core-vault",
-  6: "/engineer-certification",
-  7: "/final-authorization",
+  6: "/final-authorization",
+  7: "/engineer-certification",
 };
 
 function forbidden(title: string, message: string) {
