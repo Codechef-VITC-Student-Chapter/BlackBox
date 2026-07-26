@@ -6,7 +6,11 @@ export default async function FinalAuthorizationLayout({
 }: {
   children: ReactNode;
 }) {
+<<<<<<< HEAD
   await requireModuleRouteAccess(6);
+=======
+  await requireModuleRouteAccess(7);
+>>>>>>> upstream/main
 
   return children;
 }

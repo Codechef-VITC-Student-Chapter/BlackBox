@@ -58,7 +58,11 @@ export default function SuccessPage() {
   return (
     <PageTransition>
       <BlackboxShell
+<<<<<<< HEAD
         moduleCode="MOD-06"
+=======
+        moduleCode="MOD-07"
+>>>>>>> upstream/main
         exeName="GATEWAY_COMPLETE.EXE"
         terminalLabel="AUTH COMPLETE"
         maintenanceSeal="#4097"

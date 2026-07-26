@@ -11,8 +11,13 @@ const MODULE_ROUTES: Record<number, string> = {
   3: "/network-labyrinth",
   4: "/codechef-puzzle",
   5: "/core-vault",
+<<<<<<< HEAD
   6: "/final-authorization",
   7: "/engineer-certification",
+=======
+  6: "/engineer-certification",
+  7: "/final-authorization",
+>>>>>>> upstream/main
 };
 
 type CompletedSuccessRoute = {

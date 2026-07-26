@@ -52,7 +52,11 @@ export default function FinalAuthorizationPage() {
   return (
     <PageTransition>
       <BlackboxShell
+<<<<<<< HEAD
         moduleCode="MOD-06"
+=======
+        moduleCode="MOD-07"
+>>>>>>> upstream/main
         exeName="FINAL_AUTH.EXE"
         terminalLabel="CONTROL PANEL"
         maintenanceSeal="#4097"

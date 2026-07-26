@@ -41,7 +41,11 @@ export default function FireSequencePage() {
   return (
     <PageTransition>
       <BlackboxShell
+<<<<<<< HEAD
         moduleCode="MOD-06"
+=======
+        moduleCode="MOD-07"
+>>>>>>> upstream/main
         exeName="FIRE_SEQUENCE.EXE"
         terminalLabel="WEAPON SYSTEM OVERRIDE"
         maintenanceSeal="#4097"

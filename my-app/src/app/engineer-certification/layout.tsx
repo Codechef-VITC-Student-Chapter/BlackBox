@@ -6,7 +6,11 @@ export default async function EngineerCertificationLayout({
 }: {
   children: ReactNode;
 }) {
+<<<<<<< HEAD
   await requireModuleRouteAccess(7);
+=======
+  await requireModuleRouteAccess(6);
+>>>>>>> upstream/main
 
   return children;
 }
