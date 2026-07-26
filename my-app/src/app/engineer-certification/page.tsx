@@ -1,211 +1,126 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { PageTransition } from "@/components/ui/PageTransition";
-import {
-  Terminal,
-  CheckCircle2,
-  Award,
-  Play,
-} from "lucide-react";
 import { useEffect, useState } from "react";
-import { useAudio } from "@/hooks/useAudio";
 import { useRouter } from "next/navigation";
+import { PageTransition } from "@/components/ui/PageTransition";
+import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
+import { synth } from "@/utils/synthAudio";
+
+const BOOT_LOGS = [
+  "SYSTEM RESTORED",
+  "",
+  "Initializing Engineer Certification...",
+  "Verifying Restored Subsystems...",
+  "Authentication ........ VERIFIED",
+  "Repository ............ VERIFIED",
+  "Gateway ............... VERIFIED",
+  "Puzzle ................. VERIFIED",
+  "Core .................. VERIFIED",
+  "",
+  "Engineer Assessment Ready."
+];
+
+const STATUS_CARDS: StatusCardInfo[] = [
+  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
+  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
+  { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
+  { title: "Visual/Puzzle", status: "COMPLETE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
+  { title: "Core Vault", status: "COMPLETE", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
+  { title: "Certification", status: "ACTIVE", modId: "MOD-06", serial: "SN:84-E6", iconType: "cert" },
+];
 
 export default function EngineerCertificationPage() {
-  const [terminalLines, setTerminalLines] = useState<string[]>([]);
-  const { playSound } = useAudio();
   const router = useRouter();
+  const [terminalLines, setTerminalLines] = useState<string[]>([]);
 
   useEffect(() => {
-    const sequence = [
-      "SYSTEM RESTORED",
-      "",
-      "Initializing Engineer Certification...",
-      "Verifying Restored Subsystems...",
-      "Authentication ........ VERIFIED",
-      "Repository ............ VERIFIED",
-      "Gateway ............... VERIFIED",
-      "Puzzle ................. VERIFIED",
-      "Core .................. VERIFIED",
-      "",
-      "Engineer Assessment Ready."
-    ];
-
     let i = 0;
-
     const interval = setInterval(() => {
-      if (i < sequence.length) {
-        setTerminalLines((prev) => [...prev, sequence[i]]);
-        playSound("typing");
+      if (i < BOOT_LOGS.length) {
+        setTerminalLines((prev) => [...prev, BOOT_LOGS[i]]);
+        synth.playClick();
         i++;
       } else {
         clearInterval(interval);
       }
-    }, 650);
+    }, 600);
 
     return () => clearInterval(interval);
-  }, [playSound]);
+  }, []);
 
   return (
     <PageTransition>
-      <div className="w-full min-h-[80vh] flex flex-col lg:flex-row gap-8">
-
-        {/* LEFT */}
-
-        <div className="flex-1 glass-panel flex flex-col overflow-hidden">
-
-          <div className="border-b border-border bg-surface/50 p-4 flex items-center gap-3">
-
-            <Terminal
-              size={18}
-              className="text-secondary-text"
-            />
-
-            <span className="font-mono text-sm tracking-widest text-secondary-text">
-              ENGINEER_CERTIFICATION.EXE
-            </span>
-
-          </div>
-
-          <div className="flex-1 p-6 space-y-3 font-mono text-sm">
-
-            {terminalLines.map((line, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className={`
-                  ${line === "SYSTEM RESTORED"
-                    ? "text-primary text-lg font-bold"
-                    : ""}
-                  ${line?.includes("VERIFIED")
-                    ? "text-primary"
-                    : ""}
-                  ${line === ""
-                    ? "h-3"
-                    : ""}
-                `}
-              >
-                {line ? `> ${line}` : ""}
-              </motion.div>
-            ))}
-
-            <motion.div
-              animate={{ opacity: [1, 0] }}
-              transition={{ repeat: Infinity, duration: 0.8 }}
-              className="inline-block w-2.5 h-4 bg-primary ml-2"
-            />
-
-          </div>
-
-          <div className="border-t border-border bg-surface/30 p-6">
-
-            <p className="font-mono text-secondary-text text-sm leading-7">
-
-              Congratulations, Engineer.
-
-              <br />
-              <br />
-
-              You restored every subsystem of BLACKBOX.
-
-              <br />
-
-              One final assessment remains before certification.
-
-            </p>
-
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() =>
-                router.push("/engineer-certification/coding")
-              }
-              className="mt-8 flex items-center gap-2 px-6 py-3 border border-primary text-primary hover:bg-primary/10 transition font-mono uppercase tracking-widest"
+      <BlackboxShell
+        moduleCode="MOD-06"
+        exeName="ENG_CERT.EXE"
+        terminalLabel="VT-100 ENGINEER ASSESSMENT SUITE"
+        maintenanceSeal="#4096"
+        pwrLight="green"
+        errLight="red"
+        errLabel="ERR"
+        terminalHeaderExe="certification_verify.log"
+        baudRate="1200 BAUD"
+        ttyNumber="TTY-06"
+        directiveTitle="CLASSIFIED DIRECTIVE // CHALLENGE"
+        directiveText={
+          <>
+            The certification challenge verifies your low-level programming capability.
+            <br />
+            You will be presented with a custom sandbox to edit and execute code.
+          </>
+        }
+        statusLabel="SYSTEM STATUS"
+        statusCards={STATUS_CARDS}
+        radarLabel="EVALUATING"
+        radarSublabel="ENGINEER ASSESSMENT"
+        bottomBarText="CAUTION: ENGINEER ASSESSMENT ACTIVE"
+        bottomBarSerial="#8409-CERT"
+        wallStencil="CONTROL ROOM 04 // ENG SECTOR"
+        compactStatus={true}
+      >
+        {/* Terminal output */}
+        <div className="max-h-36 overflow-y-auto mb-4 border-b border-[#122414] pb-4 flex-shrink-0 space-y-1 text-xs">
+          {terminalLines.map((line, index) => (
+            <p
+              key={index}
+              className={`text-xs ${
+                line === "SYSTEM RESTORED" ? "text-[#33ff66] font-bold text-sm" :
+                line?.includes("VERIFIED") ? "text-[#33ff66]" :
+                line === "" ? "h-2" : "text-[#3c663a]"
+              }`}
             >
-              <Play size={16} />
+              {line !== "" && `> ${line}`}
+            </p>
+          ))}
+          {terminalLines.length < BOOT_LOGS.length && (
+            <span className="inline-block w-1.5 h-3 bg-[#33ff66]/70 ml-1 animate-pulse" />
+          )}
+        </div>
 
-              Begin Assessment
-            </motion.button>
-
+        {/* Narrative & action button */}
+        <div className="flex-1 overflow-y-auto flex flex-col justify-between">
+          <div className="space-y-4 font-mono text-xs leading-relaxed text-[#3c663a]">
+            <p>
+              Congratulations, Engineer.
+            </p>
+            <p>
+              You restored every subsystem of BLACKBOX. One final assessment remains before certification.
+            </p>
           </div>
 
+          <div className="pt-4 border-t border-[#1a2d1d] select-none">
+            <button
+              onClick={() => {
+                synth.playClick();
+                router.push("/engineer-certification/coding");
+              }}
+              className="w-full border border-[#33ff66] text-[#33ff66] bg-transparent hover:bg-[#33ff66] hover:text-black font-mono font-bold text-xs tracking-widest py-3.5 rounded-none transition-all duration-300 uppercase cursor-pointer"
+            >
+              BEGIN ASSESSMENT
+            </button>
+          </div>
         </div>
-
-        {/* RIGHT */}
-
-        <div className="lg:w-80 flex flex-col gap-4">
-
-          <h2 className="font-heading text-lg uppercase tracking-widest text-secondary-text">
-            Certification Status
-          </h2>
-
-          <StatusCard title="Authentication" />
-          <StatusCard title="Repository" />
-          <StatusCard title="Gateway" />
-          <StatusCard title="Puzzle" />
-          <StatusCard title="Core" />
-
-          <motion.div
-            whileHover={{ scale: 1.02 }}
-            className="glass-panel p-5 border border-primary/30 bg-primary/5 mt-2"
-          >
-            <div className="flex items-center gap-3 mb-3">
-
-              <Award
-                size={20}
-                className="text-primary"
-              />
-
-              <span className="font-mono text-sm text-text">
-                Final Assessment
-              </span>
-
-            </div>
-
-            <p className="text-secondary-text font-mono text-xs leading-6">
-
-              Complete the programming challenge to earn your BLACKBOX Engineer Certification.
-
-            </p>
-
-          </motion.div>
-
-        </div>
-
-      </div>
+      </BlackboxShell>
     </PageTransition>
-  );
-}
-
-function StatusCard({
-  title,
-}: {
-  title: string;
-}) {
-  return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="glass-panel p-4 flex justify-between items-center border border-primary/30 bg-primary/5"
-    >
-      <div className="flex items-center gap-3">
-
-        <CheckCircle2
-          size={18}
-          className="text-primary"
-        />
-
-        <span className="font-mono text-sm text-text">
-          {title}
-        </span>
-
-      </div>
-
-      <span className="bg-primary/20 text-primary px-2 py-1 rounded text-xs font-mono">
-        ONLINE
-      </span>
-
-    </motion.div>
   );
 }

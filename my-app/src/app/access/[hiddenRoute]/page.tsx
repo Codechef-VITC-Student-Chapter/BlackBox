@@ -1,8 +1,9 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { completeModule, unlockNextModule } from "@/engine/gameEngine";
 import { verifyAuthToken } from "@/lib/auth/jwt";
 import { connectToDatabase } from "@/lib/db/mongodb";
 import { Team } from "@/models/Team";
-import { Progress } from "@/models/Progress";
 import { GAME_CONFIG } from "@/config/game";
 
 interface PageProps {
@@ -11,133 +12,103 @@ interface PageProps {
   }>;
 }
 
+const MODULE_ROUTES: Record<number, string> = {
+  1: "/authentication",
+  2: "/repository-recovery",
+  3: "/network-labyrinth",
+  4: "/memory-reconstruction",
+  5: "/core-vault",
+  6: "/engineer-certification",
+  7: "/final-authorization",
+};
+
+function forbidden(title: string, message: string) {
+  return (
+    <section className="glass-panel max-w-xl space-y-4 p-8 text-center">
+      <p className="font-mono text-sm uppercase tracking-[0.25em] text-danger">
+        Access Denied
+      </p>
+      <h1 className="font-heading text-4xl font-bold text-text">{title}</h1>
+      <p className="font-mono text-sm text-secondary-text">{message}</p>
+    </section>
+  );
+}
+
 export default async function HiddenAccessPage({ params }: PageProps) {
   const { hiddenRoute } = await params;
   const cookieStore = await cookies();
-  const token = cookieStore.get("blackbox_session")?.value;
+  const token = cookieStore.get(GAME_CONFIG.authCookieName)?.value;
 
   if (!token) {
-    return (
-      <section className="glass-panel max-w-xl space-y-4 p-8 text-center">
-        <p className="font-mono text-sm uppercase tracking-[0.25em] text-danger">
-          Access Denied
-        </p>
-        <h1 className="font-heading text-4xl font-bold text-text">
-          No Authentication Token
-        </h1>
-        <p className="font-mono text-sm text-secondary-text">
-          Please authenticate first to access this module.
-        </p>
-      </section>
-    );
+    redirect("/authentication");
   }
 
   const payload = await verifyAuthToken(token);
 
   if (!payload) {
-    return (
-      <section className="glass-panel max-w-xl space-y-4 p-8 text-center">
-        <p className="font-mono text-sm uppercase tracking-[0.25em] text-danger">
-          Access Denied
-        </p>
-        <h1 className="font-heading text-4xl font-bold text-text">
-          Invalid Token
-        </h1>
-        <p className="font-mono text-sm text-secondary-text">
-          Your authentication token is invalid or expired.
-        </p>
-      </section>
-    );
+    redirect("/authentication");
   }
 
-  // Verify that the hidden route matches
   if (hiddenRoute !== payload.hiddenRoute) {
-    return (
-      <section className="glass-panel max-w-xl space-y-4 p-8 text-center">
-        <p className="font-mono text-sm uppercase tracking-[0.25em] text-danger">
-          Access Denied
-        </p>
-        <h1 className="font-heading text-4xl font-bold text-text">
-          Invalid Route
-        </h1>
-        <p className="font-mono text-sm text-secondary-text">
-          The hidden route does not match your token.
-        </p>
-      </section>
-    );
+    return forbidden("Invalid Route", "The hidden route does not match your token.");
   }
 
-  // Verify team exists in database
   await connectToDatabase();
-  const team = await Team.findOne({ teamId: payload.teamId }).lean();
+  const team = await Team.findOne({ teamId: payload.teamId })
+    .select("+loginPin teamId teamName eventId loginPin currentModule")
+    .lean<{
+      teamId: string;
+      teamName: string;
+      eventId: string;
+      loginPin: string;
+      currentModule: number;
+    } | null>();
 
   if (!team) {
-    return (
-      <section className="glass-panel max-w-xl space-y-4 p-8 text-center">
-        <p className="font-mono text-sm uppercase tracking-[0.25em] text-danger">
-          Access Denied
-        </p>
-        <h1 className="font-heading text-4xl font-bold text-text">
-          Team Not Found
-        </h1>
-        <p className="font-mono text-sm text-secondary-text">
-          Your team could not be found in the database.
-        </p>
-      </section>
-    );
+    return forbidden("Team Not Found", "Your team could not be found in the database.");
   }
 
-  // If all validations pass, show success message
-  // This page can be replaced with actual module content
-  
-  // Extract module number from hidden route
-  const accessedModule = parseInt(hiddenRoute.split('-')[1]);
-  
-  // The module they just completed is the one before the accessed module
+  if (payload.eventId !== team.eventId || payload.pin !== team.loginPin) {
+    return forbidden("Invalid Session", "Your authentication token does not match this team.");
+  }
+
+  const accessedModule = Number.parseInt(hiddenRoute.split("-")[1] ?? "", 10);
   const completedModule = accessedModule - 1;
-  
-  // Check if this module has already been completed
-  const existingProgress = await Progress.findOne({ 
-    teamId: payload.teamId, 
-    module: completedModule 
-  });
-  
-  // Only complete and increment if this module hasn't been completed yet
-  if (!existingProgress || !existingProgress.completed) {
+
+  if (accessedModule !== 2 || completedModule !== 1) {
+    return forbidden("Invalid Module", "This access route is not valid for the authentication module.");
+  }
+
+  const expectedHiddenRoute = `module-${accessedModule}-${team.eventId}-${team.loginPin}-${team.teamId}`;
+
+  if (hiddenRoute !== expectedHiddenRoute) {
+    return forbidden("Invalid Route", "The hidden route does not belong to this team.");
+  }
+
+  if (team.currentModule !== completedModule && team.currentModule !== accessedModule) {
+    redirect(MODULE_ROUTES[team.currentModule] ?? "/authentication");
+  }
+
+  if (team.currentModule === completedModule) {
     try {
-      // Mark the completed module as done
-      await Progress.updateOne(
-        { teamId: payload.teamId, module: completedModule },
-        { $set: { completed: true, completedAt: new Date() } },
-        { upsert: true }
-      );
-      
-      // Increment to next module (the accessed module)
-      await Team.updateOne(
-        { teamId: payload.teamId },
-        { $set: { currentModule: accessedModule } }
-      );
+      await completeModule(team.teamId, completedModule);
+      await unlockNextModule(team.teamId);
     } catch (error) {
-      console.error('[HiddenAccessPage] Error completing module:', error);
+      console.error("[HiddenAccessPage] Error completing module:", error);
     }
   }
-  
-  return (
-    <section className="glass-panel max-w-xl space-y-4 p-8 text-center">
-      <p className="font-mono text-sm uppercase tracking-[0.25em] text-primary">
-        Access Granted
-      </p>
-      <h1 className="font-heading text-4xl font-bold text-text">
-        Authentication Successful
-      </h1>
-      <div className="space-y-2 font-mono text-sm text-secondary-text">
-        <p>Team: {team.teamName}</p>
-        <p>Event ID: {payload.eventId}</p>
-        <p>Accessing Module: {accessedModule}</p>
-      </div>
-      <p className="font-mono text-sm text-primary">
-        Access granted. Stand by.
-      </p>
-    </section>
-  );
+
+  const progressedTeam = await Team.findOne({ teamId: team.teamId })
+    .select("currentModule")
+    .lean<{ currentModule: number } | null>();
+
+  if (!progressedTeam) {
+    return forbidden("Team Not Found", "Your team could not be found in the database.");
+  }
+
+  if (progressedTeam.currentModule === accessedModule) {
+    redirect("/repository-recovery");
+  }
+
+  redirect(MODULE_ROUTES[progressedTeam.currentModule] ?? "/authentication");
 }

@@ -39,6 +39,10 @@ const progressSchema = new Schema(
       type: String,
       default: "DUMMY-PUZ-KEY-777",
     },
+    moduleState: {
+      type: Schema.Types.Mixed,
+      default: {},
+    },
   },
   {
     timestamps: true,

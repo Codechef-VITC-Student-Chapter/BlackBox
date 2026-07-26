@@ -1,818 +1,304 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useState } from "react";
-import { PageTransition } from "@/components/ui/PageTransition";
-import { Terminal, ShieldCheck, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { PageTransition } from "@/components/ui/PageTransition";
+import BlackboxShell, {
+  StatusCardInfo,
+} from "@/components/ui/BlackboxShell";
+import { synth } from "@/utils/synthAudio";
+import {
+  AlertTriangle,
+  CheckCircle2,
+} from "lucide-react";
 
+const STATUS_CARDS: StatusCardInfo[] = [
+  {
+    title: "Authentication",
+    status: "COMPLETE",
+    modId: "MOD-01",
+    serial: "SN:84-A1",
+    iconType: "auth",
+  },
+  {
+    title: "Repository",
+    status: "COMPLETE",
+    modId: "MOD-02",
+    serial: "SN:84-R2",
+    iconType: "repo",
+  },
+  {
+    title: "Network",
+    status: "COMPLETE",
+    modId: "MOD-03",
+    serial: "SN:84-N3",
+    iconType: "net",
+  },
+  {
+    title: "Visual/Puzzle",
+    status: "COMPLETE",
+    modId: "MOD-04",
+    serial: "SN:84-V4",
+    iconType: "puzzle",
+  },
+  {
+    title: "Core Vault",
+    status: "COMPLETE",
+    modId: "MOD-05",
+    serial: "SN:84-C5",
+    iconType: "vault",
+  },
+  {
+    title: "Final Authorization",
+    status: "ACTIVE",
+    modId: "MOD-06",
+    serial: "SN:84-F6",
+    iconType: "final",
+  },
+  {
+    title: "Certification",
+    status: "LOCKED",
+    modId: "MOD-07",
+    serial: "SN:84-E7",
+    iconType: "cert",
+  },
+];
 
 export default function AuthorizationPage() {
-
   const router = useRouter();
 
+  const [submission, setSubmission] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  const [recoveryKey,setRecoveryKey] = useState("");
-  const [engineerId,setEngineerId] = useState("");
+  async function authorizeGateway() {
+    synth.playClick();
 
-  const [step,setStep] = useState(1);
-
-  const [message,setMessage] = useState("");
-
-  const [authorized,setAuthorized] = useState(false);
-
-
-
-  // FRONTEND RECOVERY KEY VALIDATION
-
-  function verifyRecoveryKey(){
-
-
-    const regex =
-      /^BLACKBOX\d{8}$/;
-
-
-    if(!regex.test(recoveryKey)){
-
-      setMessage(
-        "INVALID RECOVERY KEY FORMAT"
-      );
-
+    if (!submission.trim()) {
+      synth.playError();
+      setSuccess(false);
+      setMessage("RECOVERY SUBMISSION REQUIRED");
       return;
-
     }
 
+    try {
+      setSubmitting(true);
 
+      const response = await fetch("/api/final-authorization/verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          submission: submission.trim(),
+        }),
+      });
 
-    const datePart =
-      recoveryKey.substring(8);
+      const data = await response.json();
 
-
-
-    const year =
-      Number(datePart.substring(0,4));
-
-    const month =
-      Number(datePart.substring(4,6));
-
-    const day =
-      Number(datePart.substring(6,8));
-
-
-
-    const date =
-      new Date(
-        year,
-        month-1,
-        day
-      );
-
-
-
-    if(
-      date.getFullYear() !== year ||
-      date.getMonth()+1 !== month ||
-      date.getDate() !== day
-    ){
-
-      setMessage(
-        "INVALID DATE FORMAT"
-      );
-
-      return;
-
-    }
-
-
-
-    setMessage(
-      "PRIMARY AUTHORIZATION VERIFIED"
-    );
-
-
-    setStep(2);
-
-  }
-
-
-
-
-
-  // BACKEND ENGINEER ID CHECK
-
-  async function verifyEngineerId(){
-
-
-    if(!engineerId){
-
-      setMessage(
-        "ENGINEER ID REQUIRED"
-      );
-
-      return;
-
-    }
-
-
-
-    try{
-
-
-      /*
-        Backend API call here
-
-        Example:
-
-        const response =
-        await fetch("/api/verify-engineer",{
-          method:"POST",
-          body:JSON.stringify({
-            engineerId
-          })
-        });
-
-
-      */
-
-
-      // temporary success
-
-      const backendVerified = true;
-
-
-
-      if(backendVerified){
-
-
-        setAuthorized(true);
-
-
-        setMessage(
-          "FINAL AUTHORIZATION GRANTED"
-        );
-
-
+      if (!response.ok || !data.valid) {
+        synth.playError();
+        setSuccess(false);
+        setMessage(data.message ?? "AUTHORIZATION FAILED");
+        return;
       }
 
-      else{
+      synth.playSuccess();
 
+      setSuccess(true);
+      setMessage("FINAL AUTHORIZATION GRANTED");
 
-        setMessage(
-          "ENGINEER ID VERIFICATION FAILED"
-        );
-
-
-      }
-
-
+      setTimeout(() => {
+        router.push("/final-authorization/fire-sequence");
+      }, 1500);
+    } catch {
+      synth.playError();
+      setSuccess(false);
+      setMessage("NETWORK FAILURE");
+    } finally {
+      setSubmitting(false);
     }
-
-    catch{
-
-
-      setMessage(
-        "SERVER CONNECTION FAILED"
-      );
-
-    }
-
   }
 
-
-
-
-return (
-
-<PageTransition>
-
-
-<div className="w-full min-h-[80vh] flex flex-col lg:flex-row gap-8">
-
-
-{/* TERMINAL */}
-
-
-<div className="flex-1 glass-panel overflow-hidden">
-
-
-<div className="
-border-b
-border-border
-bg-surface/50
-p-4
-flex
-items-center
-gap-3
-">
-
-
-<Terminal
-size={18}
-className="text-secondary-text"
-/>
-
-
-<span className="
-font-mono
-text-sm
-tracking-widest
-text-secondary-text
-">
-
-AUTHORIZATION TERMINAL
-
-</span>
-
-
-</div>
-
-
-
-<div className="
-p-8
-font-mono
-space-y-8
-">
-
-
-<h1 className="
-text-3xl
-text-primary
-font-bold
-tracking-widest
-">
-
-FINAL AUTHORIZATION
-
-</h1>
-
-
-
-
-
-{/* STEP 1 */}
-
-
-{
-step===1 && (
-
-
-<div className="space-y-6">
-
-
-<p className="text-secondary-text">
-
-RECOVERY KEY
-
-</p>
-
-
-
-<input
-
-value={recoveryKey}
-
-onChange={(e)=>
-setRecoveryKey(e.target.value)
-}
-
-placeholder="ENTER RECOVERY KEY"
-
-className="
-w-full
-bg-black
-border
-border-border
-px-4
-py-3
-text-white
-outline-none
-focus:border-primary
-"
-
-/>
-
-
-
-<button
-
-onClick={verifyRecoveryKey}
-
-className="
-border
-border-primary
-text-primary
-px-8
-py-3
-hover:bg-primary
-hover:text-black
-transition
-"
-
->
-
-VERIFY
-
-</button>
-
-
-</div>
-
-
-)
-
-}
-
-
-
-
-
-
-{/* STEP 2 */}
-
-
-
-{
-step===2 && !authorized && (
-
-
-<motion.div
-
-initial={{
-opacity:0,
-y:20
-}}
-
-animate={{
-opacity:1,
-y:0
-}}
-
-className="space-y-6"
-
->
-
-
-<p className="text-primary">
-
-PRIMARY AUTHORIZATION VERIFIED
-
-</p>
-
-
-
-<p className="text-secondary-text">
-
-ENGINEER ID REQUIRED
-
-</p>
-
-
-
-<p className="text-xs text-secondary-text">
-
-Expected Format:
-
-<br/>
-
-&lt;RecoveryKey&gt;-&lt;EngineerID&gt;
-
-</p>
-
-
-
-
-
-<div>
-
-
-<p className="text-secondary-text mb-2">
-
-RECOVERY KEY
-
-</p>
-
-
-<input
-
-value={recoveryKey}
-
-readOnly
-
-className="
-w-full
-bg-black
-border
-border-border
-px-4
-py-3
-text-primary
-"
-
-/>
-
-
-</div>
-
-
-
-
-
-<div>
-
-
-<p className="text-secondary-text mb-2">
-
-ENGINEER ID
-
-</p>
-
-
-
-<input
-
-value={engineerId}
-
-onChange={(e)=>
-setEngineerId(e.target.value)
-}
-
-placeholder="ENTER ENGINEER ID"
-
-className="
-w-full
-bg-black
-border
-border-border
-px-4
-py-3
-text-white
-outline-none
-focus:border-primary
-"
-
-/>
-
-
-</div>
-
-
-
-
-<button
-
-onClick={verifyEngineerId}
-
-className="
-border
-border-primary
-text-primary
-px-8
-py-3
-hover:bg-primary
-hover:text-black
-transition
-"
-
->
-
-AUTHORIZE
-
-</button>
-
-
-
-</motion.div>
-
-
-)
-
-}
-
-
-
-
-
-{/* SUCCESS */}
-
-
-
-{
-authorized && (
-
-
-<motion.div
-
-initial={{
-opacity:0
-}}
-
-animate={{
-opacity:1
-}}
-
-className="space-y-6"
-
->
-
-
-<p className="text-primary text-xl">
-
-PRIMARY AUTHORIZATION VERIFIED
-
-</p>
-
-
-
-<p className="text-primary">
-
-ENGINEER ID VERIFIED
-
-</p>
-
-
-
-<p>
-
-WELCOME BACK, ENGINEER.
-
-</p>
-
-
-
-
-<p className="text-primary">
-
-FINAL AUTHORIZATION GRANTED.
-
-</p>
-
-
-
-
-<div className="
-text-primary
-tracking-widest
-">
-
-██████████████████
-
-<br/>
-
-100%
-
-</div>
-
-
-
-
-
-<div className="space-y-2">
-
-
-<p>
-
-WEAPON UNLOCKED
-
-</p>
-
-
-<p>
-
-TARGET CONNECTION ESTABLISHED
-
-</p>
-
-
-<p className="text-secondary-text">
-
-Awaiting Authorization...
-
-</p>
-
-
-</div>
-
-
-
-
-<button
-
-onClick={()=>router.push(
-"/final-authorization/fire-sequence"
-)}
-
-className="
-border
-border-primary
-text-primary
-px-10
-py-3
-hover:bg-primary
-hover:text-black
-transition
-"
-
->
-
-FIRE
-
-</button>
-
-
-</motion.div>
-
-
-)
-
-}
-
-
-
-
-
-{
-message && (
-
-<p className="
-text-danger
-">
-
-{message}
-
-</p>
-
-)
-
-}
-
-
-
-</div>
-
-
-</div>
-
-
-
-
-
-
-{/* STATUS PANEL */}
-
-
-<div className="lg:w-80 flex flex-col gap-4">
-
-
-<h2 className="
-font-heading
-uppercase
-tracking-widest
-text-secondary-text
-">
-
-Authorization Status
-
-</h2>
-
-
-
-<StatusCard
-title="Recovery Key"
-status={
-step>1
-?
-"VERIFIED"
-:
-"WAITING"
-}
-success={step>1}
-/>
-
-
-
-<StatusCard
-title="Engineer ID"
-status={
-authorized
-?
-"VERIFIED"
-:
-"LOCKED"
-}
-success={authorized}
-/>
-
-
-
-<StatusCard
-title="Final Access"
-status={
-authorized
-?
-"GRANTED"
-:
-"DENIED"
-}
-success={authorized}
-/>
-
-
-</div>
-
-
-
-</div>
-
-
+  return (
+    <PageTransition>
+  <BlackboxShell
+    moduleCode="MOD-06"
+    exeName="GATEWAY_AUTH.EXE"
+    terminalLabel="FINAL AUTHORIZATION"
+    maintenanceSeal="#4097"
+    pwrLight="green"
+    errLight="red"
+    errLabel="ERR"
+    terminalHeaderExe="credentials_gate.log"
+    baudRate="9600 BAUD"
+    ttyNumber="TTY-06"
+    directiveTitle="CLASSIFIED DIRECTIVE // FINAL AUTHORIZATION"
+    directiveText={
+      <>
+        Submit the complete recovery sequence to verify your
+        identity.
+        <br />
+        Recovery format:
+        <span className="text-[#33ff66]">
+          {" "}
+          RECOVERYKEY-ENGINEERID
+        </span>
+      </>
+    }
+    statusLabel="SYSTEM STATUS"
+    statusCards={STATUS_CARDS}
+    radarLabel="AUTHORIZING"
+    radarSublabel="FINAL GATEWAY"
+    bottomBarText="ENGINEER AUTHORIZATION REQUIRED"
+    bottomBarSerial="#8409-FINAL"
+    wallStencil="CONTROL ROOM 04 // GATEWAY CENTER"
+    compactStatus
+  >
+    <div className="flex-1 overflow-y-auto flex flex-col justify-between space-y-4">
+
+      <div className="space-y-4">
+
+        <div className="text-[10px] text-[#3c663a] uppercase tracking-widest border-b border-[#1a2d1d] pb-1.5 mb-2 font-bold select-none">
+          // FINAL AUTHORIZATION TERMINAL
+        </div>
+
+        <AnimatePresence mode="wait">
+          {message && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className={`p-3 font-mono text-[10px] border flex items-center gap-2 ${
+                success
+                  ? "bg-[#061006]/90 border-[#33ff66]/30 text-[#33ff66]"
+                  : "bg-[#170809]/90 border-[#ff3333]/30 text-[#ff3333]"
+              }`}
+            >
+              {success ? (
+                <CheckCircle2 size={13} />
+              ) : (
+                <AlertTriangle size={13} />
+              )}
+
+              {message}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="bg-[#040e04] border border-[#1a2d1d] p-3 text-[10px] text-[#3c663a] space-y-1">
+
+          <p className="text-[#33ff66] font-bold uppercase tracking-wider">
+            // AUTHORIZATION NOTICE
+          </p>
+
+          <p>
+            Enter the complete recovery submission exactly as
+            recovered from the previous modules.
+          </p>
+
+          <p className="text-[#5cff7f]">
+            FORMAT:
+          </p>
+
+          <p className="text-white">
+            BLACKBOXYYYYMMDD-ENGINEERID
+          </p>
+
+        </div>
+
+        <div className="space-y-2">
+
+          <label
+            htmlFor="submission-input"
+            className="text-[10px] text-[#3c663a] uppercase tracking-widest block font-bold"
+          >
+            RECOVERY SUBMISSION
+          </label>
+
+          <div className="relative flex items-center">
+
+            <span className="absolute left-0 text-[#3c663a] font-bold">
+              &gt;_
+            </span>
+
+            <input
+              id="submission-input"
+              type="text"
+              value={submission}
+              onChange={(e) => {
+                setSubmission(e.target.value.toUpperCase());
+                setMessage("");
+              }}
+              placeholder="BLACKBOX20260729-ENG12345"
+              autoComplete="off"
+              spellCheck={false}
+              className="w-full bg-transparent border-b-2 border-[#33ff66] text-[#33ff66] font-mono text-sm outline-none caret-[#33ff66] placeholder-[#264c23] py-2 pl-7 uppercase tracking-widest"
+            />
+
+          </div>
+
+        </div>
+
+        <button
+          disabled={submitting}
+          onClick={authorizeGateway}
+          className="
+            w-full
+            border
+            border-[#33ff66]
+            bg-[#33ff66]
+            text-black
+            font-mono
+            font-bold
+            tracking-widest
+            py-3.5
+            text-xs
+            uppercase
+            transition-all
+            duration-300
+            hover:shadow-[0_0_12px_rgba(51,255,102,0.6)]
+            disabled:opacity-50
+            disabled:cursor-not-allowed
+          "
+        >
+          {submitting
+            ? "VERIFYING AUTHORIZATION..."
+            : "AUTHORIZE GATEWAY"}
+        </button>
+                {success && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-[#040e04] border border-[#1a2d1d] p-4 rounded space-y-3 font-mono text-xs text-[#3c663a]"
+          >
+            <span className="text-[#33ff66] font-bold block uppercase tracking-wider">
+              // AUTHORIZATION COMPLETE
+            </span>
+
+            <p>
+              Recovery submission accepted.
+            </p>
+
+            <div className="text-[9px] space-y-1">
+              <p>RECOVERY KEY ........ VERIFIED</p>
+              <p>ENGINEER ID ........ VERIFIED</p>
+              <p>MODULE STATUS ...... COMPLETE</p>
+              <p>NEXT MODULE ........ ENGINEER CERTIFICATION</p>
+            </div>
+
+            <p className="text-[#33ff66] animate-pulse">
+              Redirecting to Engineer Certification...
+            </p>
+          </motion.div>
+        )}
+
+      </div>
+    </div>
+  </BlackboxShell> 
 </PageTransition>
-
-)
-
-}
-
-
-
-
-
-
-function StatusCard({
-title,
-status,
-success=false
-}:{
-title:string;
-status:string;
-success?:boolean;
-}){
-
-
-return (
-
-<motion.div
-
-whileHover={{
-scale:1.02
-}}
-
-className={`
-glass-panel
-p-4
-flex
-justify-between
-items-center
-border
-
-${
-success
-?
-"border-primary/30 bg-primary/5"
-:
-"border-border"
-}
-
-`}
-
->
-
-
-<div className="flex items-center gap-3">
-
-
-{
-success
-?
-<ShieldCheck
-size={18}
-className="text-primary"
-/>
-:
-<Lock
-size={18}
-className="text-secondary-text"
-/>
-}
-
-
-<span className="font-mono text-sm">
-
-{title}
-
-</span>
-
-
-</div>
-
-
-<span className="font-mono text-xs">
-
-{status}
-
-</span>
-
-
-</motion.div>
-
-)
-
+);
 }

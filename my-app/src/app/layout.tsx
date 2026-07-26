@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* <AuroraBackground /> */}
         <AnimatedGrid />
         
-        <main className="relative z-10 min-h-screen flex flex-col items-center justify-center p-6 lg:p-12">
+        <main className="relative z-10 w-full min-h-screen p-0 m-0 bg-[#050705]">
           {children}
         </main>
         
