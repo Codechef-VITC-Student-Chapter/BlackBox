@@ -125,6 +125,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  await Team.updateOne(
+    { teamId: auth.team.teamId },
+    { $set: { "module3Data.recoveryKey": recoveryKey } },
+  );
   await completeModule(auth.team.teamId, MODULE_NUMBER);
   await unlockNextModule(auth.team.teamId);
 

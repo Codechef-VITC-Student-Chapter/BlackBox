@@ -10,7 +10,7 @@ const MODULE_ROUTES: Record<number, string> = {
   1: "/authentication",
   2: "/repository-recovery",
   3: "/network-labyrinth",
-  4: "/memory-reconstruction",
+  4: "/codechef-puzzle",
   5: "/core-vault",
   6: "/engineer-certification",
   7: "/final-authorization",

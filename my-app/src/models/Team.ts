@@ -48,6 +48,20 @@ const teamSchema = new Schema(
       min: 0,
       default: 0,
     },
+    module2Data: {
+      recoveryKey: {
+        type: String,
+        trim: true,
+        default: null,
+      },
+    },
+    module3Data: {
+      recoveryKey: {
+        type: String,
+        trim: true,
+        default: null,
+      },
+    },
     module4Data: {
       plaintextKey: {
         type: String,
