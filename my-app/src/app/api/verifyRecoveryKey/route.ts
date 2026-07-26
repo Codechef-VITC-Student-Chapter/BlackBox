@@ -35,7 +35,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
-    const isCorrect = recoveryKey.trim().toLowerCase() === REPOSITORY_RECOVERY_CHALLENGE.recoveryKey.toLowerCase();
+    const isCorrect = recoveryKey.trim().toUpperCase() === REPOSITORY_RECOVERY_CHALLENGE.recoveryKey.toUpperCase();
 
     await logSubmission({
       teamId: auth.team.teamId,
