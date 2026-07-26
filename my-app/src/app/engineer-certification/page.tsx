@@ -51,11 +51,7 @@ export default function EngineerCertificationPage() {
   return (
     <PageTransition>
       <BlackboxShell
-<<<<<<< HEAD
         moduleCode="MOD-07"
-=======
-        moduleCode="MOD-06"
->>>>>>> upstream/main
         exeName="ENG_CERT.EXE"
         terminalLabel="VT-100 ENGINEER ASSESSMENT SUITE"
         maintenanceSeal="#4096"
