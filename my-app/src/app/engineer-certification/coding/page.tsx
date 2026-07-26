@@ -373,7 +373,7 @@ export default function CodingPage() {
   return (
     <PageTransition>
       <BlackboxShell
-        moduleCode="MOD-06"
+        moduleCode="MOD-07"
         exeName="CODE_SANDBOX.EXE"
         terminalLabel="SECURE CODE INTERPRETER"
         maintenanceSeal="#4096"

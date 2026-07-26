@@ -31,7 +31,7 @@ export default function VictoryCapturePage() {
   return (
     <PageTransition>
       <BlackboxShell
-        moduleCode="MOD-06"
+        moduleCode="MOD-07"
         exeName="VICTORY_CAPTURE.EXE"
         terminalLabel="PHOTO CAPTURE TERMINAL"
         maintenanceSeal="#4096"
