@@ -13,6 +13,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/repository-recovery/:path*",
     "/network-labyrinth/:path*",
     "/codechef-puzzle/:path*",
     "/core-vault/:path*",

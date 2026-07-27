@@ -47,6 +47,8 @@ const codeSubmissionSchema = new Schema(
   }
 );
 
+codeSubmissionSchema.index({ user_id: 1, problem_id: 1 });
+
 export type CodeSubmissionDocument = InferSchemaType<typeof codeSubmissionSchema> & { _id: mongoose.Types.ObjectId | string };
 
 export const CodeSubmission: Model<CodeSubmissionDocument> =

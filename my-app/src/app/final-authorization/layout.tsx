@@ -6,7 +6,11 @@ export default async function FinalAuthorizationLayout({
 }: {
   children: ReactNode;
 }) {
-  await requireModuleRouteAccess(7);
+  await requireModuleRouteAccess(7, {
+    route: "/final-authorization/success",
+    completedModule: 7,
+    nextModule: 7,
+  });
 
   return children;
 }

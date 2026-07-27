@@ -6,7 +6,14 @@ export default async function EngineerCertificationLayout({
 }: {
   children: ReactNode;
 }) {
-  await requireModuleRouteAccess(6);
+  await requireModuleRouteAccess(6, {
+    route: [
+      "/engineer-certification/recovery-complete",
+      "/engineer-certification/victory-capture",
+    ],
+    completedModule: 6,
+    nextModule: 7,
+  });
 
   return children;
 }

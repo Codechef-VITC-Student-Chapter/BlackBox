@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { synth } from "@/utils/synthAudio";
 
 type SoundType = "ambient" | "click" | "error" | "success" | "typing" | "boot";
 
 export function useAudio() {
-const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     const muted =
@@ -29,15 +30,23 @@ const [isMuted, setIsMuted] = useState(true);
   const playSound = useCallback((type: SoundType) => {
     if (isMuted) return;
     
-    try {
-      const audio = new Audio(`/sounds/${type}.mp3`);
-      audio.volume = type === "ambient" ? 0.2 : 0.5;
-      if (type === "ambient") audio.loop = true;
-      audio.play().catch(() => {
-        // Silently fail if audio files don't exist
-      });
-    } catch (e) {
-      // Silently fail if audio files don't exist
+    switch (type) {
+      case "click":
+      case "typing":
+        synth.playClick();
+        break;
+      case "error":
+        synth.playError();
+        break;
+      case "success":
+        synth.playSuccess();
+        break;
+      case "boot":
+        synth.playScanSweep();
+        break;
+      default:
+        synth.playClick();
+        break;
     }
   }, [isMuted]);
 

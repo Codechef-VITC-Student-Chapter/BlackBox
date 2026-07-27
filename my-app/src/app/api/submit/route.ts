@@ -6,12 +6,21 @@ import { CodeSubmission } from "@/models/CodeSubmission";
 import { executeCode } from "@/lib/judge0";
 import { getVerdict, Verdict } from "@/lib/judge";
 
+import { getActiveModuleTeam } from "@/lib/modules/activeModule";
+import { jsonError } from "@/lib/http/responses";
+
 export async function POST(req: NextRequest) {
   try {
+    const auth = await getActiveModuleTeam(req, 6, "Engineer Certification");
+    if (!auth.ok) {
+      return jsonError(auth.message, auth.status);
+    }
+    const user_id = auth.team.teamId;
+
     await connectToDatabase();
     
-    // In MVP, user_id might be missing or mocked
-    const { problem_id, language_id, source_code, user_id = "anonymous" } = await req.json();
+    const body = await req.json();
+    const { problem_id, language_id, source_code } = body;
 
     if (!problem_id || !language_id || !source_code) {
       return NextResponse.json(
@@ -90,18 +99,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Save the submission
-    const submission = await CodeSubmission.create({
-      user_id,
-      problem_id: problem._id,
-      language_id,
-      source_code,
-      status: finalVerdict,
-      passed: passedCount,
-      total: allTestCases.length,
-      time: maxTime,
-      memory: maxMemory,
-    });
+    // Overwrite existing submission or create new one for (user_id, problem_id)
+    const submission = await CodeSubmission.findOneAndUpdate(
+      { user_id, problem_id: problem._id },
+      {
+        user_id,
+        problem_id: problem._id,
+        language_id,
+        source_code,
+        status: finalVerdict,
+        passed: passedCount,
+        total: allTestCases.length,
+        time: maxTime,
+        memory: maxMemory,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     // Return the response (hiding test case details, except maybe the number)
     return NextResponse.json({
