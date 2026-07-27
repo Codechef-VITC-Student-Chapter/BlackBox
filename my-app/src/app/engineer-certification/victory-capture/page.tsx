@@ -25,7 +25,7 @@ export default function VictoryCapturePage() {
 
   const handleContinue = () => {
     synth.playClick();
-    router.push("/leaderboard");
+    router.push("/final-authorization/success");
   };
 
   return (
@@ -90,7 +90,7 @@ export default function VictoryCapturePage() {
           <div className="bg-[#040e04] border border-[#1a2d1d] rounded-md p-4 font-mono text-[10px] text-[#3c663a] leading-relaxed space-y-1">
             <p className="text-[#33ff66] font-bold uppercase tracking-wider mb-1">{"// CAPTURE YOUR VICTORY"}</p>
             <p>Gather your entire team inside the frame.</p>
-            <p>Your final achievement frame is calculated based on leaderboard rank.</p>
+            <p>Your victory capture snapshot will be saved to your engineer certification credentials.</p>
             <p className="text-white font-bold pt-1">Smile... this moment is permanent.</p>
           </div>
 
