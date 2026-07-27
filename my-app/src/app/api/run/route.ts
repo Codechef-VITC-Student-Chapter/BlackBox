@@ -5,8 +5,16 @@ import { TestCase } from "@/models/TestCase";
 import { executeCode } from "@/lib/judge0";
 import { getVerdict } from "@/lib/judge";
 
+import { getActiveModuleTeam } from "@/lib/modules/activeModule";
+import { jsonError } from "@/lib/http/responses";
+
 export async function POST(req: NextRequest) {
   try {
+    const auth = await getActiveModuleTeam(req, 6, "Engineer Certification");
+    if (!auth.ok) {
+      return jsonError(auth.message, auth.status);
+    }
+
     await connectToDatabase();
     
     const { problem_id, language_id, source_code } = await req.json();

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { synth } from "@/utils/synthAudio";
 import Editor from "@monaco-editor/react";
+import LeaderboardSection from "@/components/certification/LeaderboardSection";
 import type { LeaderboardEntry } from "@/lib/scoring/ctfd";
 import { AlertTriangle, Terminal } from "lucide-react";
 
@@ -450,34 +451,9 @@ export default function CodingPage() {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="space-y-3 font-mono text-xs text-[#86efac]"
+                      className="h-full w-full min-h-[300px]"
                     >
-                      <div className="flex justify-between items-center border-b border-[#122014] pb-2 mb-3">
-                        <span className="font-bold uppercase tracking-wider">{"// PLATFORM STANDINGS"}</span>
-                        {leaderboardLoading && <span className="animate-pulse text-[#254228]">POLLING GATEWAY...</span>}
-                      </div>
-
-                      {leaderboard.length === 0 && !leaderboardLoading ? (
-                        <div className="text-center py-6 text-[#254228]">No team scores recorded yet.</div>
-                      ) : (
-                        <div className="space-y-2">
-                          {leaderboard.map((team) => (
-                            <div
-                              key={team.teamId}
-                              className="bg-[#020402] border border-[#122014] p-3 flex justify-between items-center text-[10px] hover:border-[#33ff66]/30 transition-colors"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="text-[#f59e0b] font-bold">#{team.rank}</span>
-                                <span className="text-white font-bold truncate max-w-[140px]">{team.teamName}</span>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-[#33ff66] font-bold block">{team.score} PTS</span>
-                                <span className="text-[8px] text-[#254228]">{team.modulesCompleted} / 7 COMPLETED</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <LeaderboardSection />
                     </motion.div>
                   )}
                 </div>
