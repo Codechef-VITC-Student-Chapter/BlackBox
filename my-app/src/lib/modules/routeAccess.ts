@@ -16,7 +16,7 @@ const MODULE_ROUTES: Record<number, string> = {
 };
 
 type CompletedSuccessRoute = {
-  route: string;
+  route: string | string[];
   completedModule: number;
   nextModule: number;
 };
@@ -35,8 +35,14 @@ export async function requireModuleRouteAccess(
     redirect("/authentication");
   }
 
+  const isSuccessRoute = completedSuccessRoute
+    ? Array.isArray(completedSuccessRoute.route)
+      ? completedSuccessRoute.route.includes(pathname ?? "")
+      : pathname === completedSuccessRoute.route
+    : false;
+
   if (team.currentModule === moduleNumber) {
-    if (completedSuccessRoute && pathname === completedSuccessRoute.route) {
+    if (isSuccessRoute) {
       redirect(MODULE_ROUTES[moduleNumber] ?? "/authentication");
     }
 
@@ -44,10 +50,9 @@ export async function requireModuleRouteAccess(
   }
 
   if (
-    completedSuccessRoute &&
-    pathname === completedSuccessRoute.route &&
-    team.currentModule === completedSuccessRoute.nextModule &&
-    (await hasCompletedModule(team.teamId, completedSuccessRoute.completedModule))
+    isSuccessRoute &&
+    team.currentModule === completedSuccessRoute!.nextModule &&
+    (await hasCompletedModule(team.teamId, completedSuccessRoute!.completedModule))
   ) {
     return team;
   }

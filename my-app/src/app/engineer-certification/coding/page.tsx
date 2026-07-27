@@ -545,7 +545,6 @@ export default function CodingPage() {
               
             </div>
           </div>
-          </div>
 
         </div>
       </div>

@@ -6,7 +6,11 @@ export default async function CoreVaultLayout({
 }: {
   children: ReactNode;
 }) {
-  await requireModuleRouteAccess(5);
+  await requireModuleRouteAccess(5, {
+    route: "/core-vault/success",
+    completedModule: 5,
+    nextModule: 6,
+  });
 
   return children;
 }
