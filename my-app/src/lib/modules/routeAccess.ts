@@ -12,7 +12,7 @@ const MODULE_ROUTES: Record<number, string> = {
   4: "/codechef-puzzle",
   5: "/core-vault",
   6: "/engineer-certification",
-  7: "/final-authorization",
+  7: "/engineer-certification/victory-capture",
 };
 
 type CompletedSuccessRoute = {

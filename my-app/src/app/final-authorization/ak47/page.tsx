@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
@@ -20,7 +19,6 @@ const STATUS_CARDS: StatusCardInfo[] = [
 ];
 
 export default function ak47() {
-  const router = useRouter();
   const [modeIndex, setModeIndex] = useState(0);
   const [activated, setActivated] = useState(false);
 
@@ -111,7 +109,6 @@ export default function ak47() {
                 <button
                   onClick={() => {
                     synth.playClick();
-                    router.push("/final-authorization/authorization");
                   }}
                   className="mt-1 border border-[#ff3333] text-[#ff3333] bg-transparent hover:bg-[#ff3333] hover:text-black font-mono text-xs font-bold py-1.5 px-3 uppercase transition-all duration-200 cursor-pointer"
                 >

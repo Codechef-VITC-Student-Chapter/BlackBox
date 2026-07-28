@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
@@ -19,7 +18,6 @@ const STATUS_CARDS: StatusCardInfo[] = [
 ];
 
 export default function FireSequencePage() {
-  const router = useRouter();
   const [fired, setFired] = useState(false);
   const [complete, setComplete] = useState(false);
 
@@ -32,10 +30,6 @@ export default function FireSequencePage() {
     setTimeout(() => {
       setComplete(true);
     }, 2500);
-
-    setTimeout(() => {
-      router.push("/final-authorization/success");
-    }, 6000);
   }
 
   return (

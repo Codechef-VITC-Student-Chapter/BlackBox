@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
 import { synth } from "@/utils/synthAudio";
@@ -32,7 +31,6 @@ const STATUS_CARDS: StatusCardInfo[] = [
 ];
 
 export default function CoreSuccessPage() {
-  const router = useRouter();
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [redirecting, setRedirecting] = useState(false);
 
@@ -50,14 +48,11 @@ export default function CoreSuccessPage() {
       } else {
         clearInterval(interval);
         setRedirecting(true);
-        setTimeout(() => {
-          router.push("/final-authorization");
-        }, 3500);
       }
     }, 600);
 
     return () => clearInterval(interval);
-  }, [router]);
+  }, []);
 
   return (
     <PageTransition>

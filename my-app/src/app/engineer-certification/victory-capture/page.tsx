@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
 import { synth } from "@/utils/synthAudio";
@@ -16,8 +15,6 @@ const STATUS_CARDS: StatusCardInfo[] = [
 ];
 
 export default function VictoryCapturePage() {
-  const router = useRouter();
-
   const handleCapture = () => {
     synth.playClick();
     synth.playScanSweep();
@@ -25,7 +22,6 @@ export default function VictoryCapturePage() {
 
   const handleContinue = () => {
     synth.playClick();
-    router.push("/final-authorization/success");
   };
 
   return (

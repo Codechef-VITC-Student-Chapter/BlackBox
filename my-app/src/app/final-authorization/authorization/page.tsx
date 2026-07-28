@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, {
@@ -66,8 +65,6 @@ const STATUS_CARDS: StatusCardInfo[] = [
 ];
 
 export default function AuthorizationPage() {
-  const router = useRouter();
-
   const [submission, setSubmission] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
@@ -110,10 +107,6 @@ export default function AuthorizationPage() {
 
       setSuccess(true);
       setMessage("FINAL AUTHORIZATION GRANTED");
-
-      setTimeout(() => {
-        router.push("/final-authorization/fire-sequence");
-      }, 1500);
     } catch {
       synth.playError();
       setSuccess(false);
