@@ -148,15 +148,30 @@ export default function CodingPage() {
 
   // Fetch first published problem
   useEffect(() => {
-    fetch("/api/admin/problems")
-      .then(res => res.json())
-      .then((data: Problem[]) => {
-        if (Array.isArray(data) && data.length > 0) {
-          const firstProb = data.find((p) => p.published) || data[0];
+    let isMounted = true;
+
+    fetch("/api/problem")
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error("Failed to load problem");
+        }
+
+        const data = await res.json();
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          const firstProb = data[0];
           setProblem(firstProb);
         }
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error("Problem fetch error:", err);
+        if (isMounted) {
+          setProblem(null);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Timer countdown
