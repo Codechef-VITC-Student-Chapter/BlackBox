@@ -3,25 +3,22 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PageTransition } from "@/components/ui/PageTransition";
-import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
 import { synth } from "@/utils/synthAudio";
-import { Camera, CameraIcon, CheckCircle2, Sparkles } from "lucide-react";
+import {
+  Camera,
+  CameraIcon,
+  CheckCircle2,
+  Sparkles,
+  ScanLine,
+  Trophy,
+} from "lucide-react";
 
-const STATUS_CARDS: StatusCardInfo[] = [
-  { title: "Authentication", status: "COMPLETE", modId: "MOD-01", serial: "SN:84-A1", iconType: "auth" },
-  { title: "Repository", status: "COMPLETE", modId: "MOD-02", serial: "SN:84-R2", iconType: "repo" },
-  { title: "Network", status: "COMPLETE", modId: "MOD-03", serial: "SN:84-N3", iconType: "net" },
-  { title: "Visual/Puzzle", status: "COMPLETE", modId: "MOD-04", serial: "SN:84-V4", iconType: "puzzle" },
-  { title: "Core Vault", status: "COMPLETE", modId: "MOD-05", serial: "SN:84-C5", iconType: "vault" },
-  { title: "Certification", status: "ACTIVE", modId: "MOD-06", serial: "SN:84-E6", iconType: "cert" },
-];
-
-const CELEBRATION_PARTICLES = Array.from({ length: 34 }, (_, index) => ({
+const CELEBRATION_PARTICLES = Array.from({ length: 42 }, (_, index) => ({
   id: index,
-  left: `${8 + ((index * 17) % 84)}%`,
-  delay: ((index * 7) % 8) / 10,
-  duration: 2.4 + ((index * 5) % 14) / 10,
-  drift: -38 + ((index * 19) % 76),
+  left: `${5 + ((index * 13) % 90)}%`,
+  delay: ((index * 5) % 8) / 10,
+  duration: 2 + ((index * 7) % 15) / 10,
+  drift: -60 + ((index * 23) % 120),
 }));
 
 export default function VictoryCapturePage() {
@@ -29,6 +26,7 @@ export default function VictoryCapturePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const celebrationTimeoutRef = useRef<number | null>(null);
+
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(false);
@@ -43,8 +41,8 @@ export default function VictoryCapturePage() {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: "user",
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
           },
           audio: false,
         });
@@ -58,14 +56,14 @@ export default function VictoryCapturePage() {
 
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          videoRef.current.playsInline = true;
+          videoRef.current.muted = true;
           await videoRef.current.play();
         }
 
         setCameraReady(true);
       } catch {
-        if (!cancelled) {
-          setCameraError(true);
-        }
+        if (!cancelled) setCameraError(true);
       }
     }
 
@@ -73,11 +71,11 @@ export default function VictoryCapturePage() {
 
     return () => {
       cancelled = true;
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
 
-      if (celebrationTimeoutRef.current !== null) {
-        window.clearTimeout(celebrationTimeoutRef.current);
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
       }
     };
   }, []);
@@ -89,251 +87,806 @@ export default function VictoryCapturePage() {
     const video = videoRef.current;
     const canvas = canvasRef.current;
 
-    if (!video || !canvas || video.videoWidth === 0 || video.videoHeight === 0) {
-      return;
-    }
+    if (!video || !canvas) return;
+    if (video.videoWidth === 0 || video.videoHeight === 0) return;
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
-    const context = canvas.getContext("2d");
-    if (!context) return;
+    const ctx = canvas.getContext("2d");
 
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    if (!ctx) return;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
     setCapturedImage(canvas.toDataURL("image/png"));
+
     setCelebrating(true);
     setFinalRevealed(false);
+
     synth.playSuccessFanfare();
 
     streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-
-    if (celebrationTimeoutRef.current !== null) {
-      window.clearTimeout(celebrationTimeoutRef.current);
-    }
 
     celebrationTimeoutRef.current = window.setTimeout(() => {
       setCelebrating(false);
       setFinalRevealed(true);
-      celebrationTimeoutRef.current = null;
-    }, 3600);
+    }, 3800);
   };
 
   return (
     <PageTransition>
-      <BlackboxShell
-        moduleCode="MOD-06"
-        exeName="VICTORY_CAPTURE.EXE"
-        terminalLabel="PHOTO CAPTURE TERMINAL"
-        maintenanceSeal="#4096"
-        pwrLight="green"
-        errLight="red"
-        errLabel="ERR"
-        terminalHeaderExe="victory_capture.log"
-        baudRate="9600 BAUD"
-        ttyNumber="TTY-06"
-        directiveTitle="CLASSIFIED DIRECTIVE // VICTORY CAPTURE"
-        directiveText={
-          <>
-            Align camera sensors before triggering the victory capture snapshot.
-            <br />
-            Gather your team inside the vector bounds of the frame.
-          </>
-        }
-        statusLabel="SYSTEM STATUS"
-        statusCards={STATUS_CARDS}
-        radarLabel="SECURED"
-        radarSublabel="GRADER SECURE"
-        bottomBarText="VICTORY FRAME ACQUIRED"
-        bottomBarSerial="#8409-VICTORY"
-        wallStencil="CONTROL ROOM 04 // ENG SECTOR"
-        compactStatus={true}
-      >
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col justify-between gap-4 relative">
-          <AnimatePresence>
-            {celebrating && (
-              <motion.div
-                className="absolute inset-0 z-30 pointer-events-none overflow-hidden"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(51,255,102,0.24),transparent_52%)]"
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1.4, opacity: [0, 1, 0] }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                />
-                {CELEBRATION_PARTICLES.map((particle) => (
-                  <motion.span
-                    key={particle.id}
-                    className="absolute top-4 h-1.5 w-1.5 rounded-full bg-[#33ff66] shadow-[0_0_10px_rgba(51,255,102,0.9)]"
-                    style={{ left: particle.left }}
-                    initial={{ y: 0, x: 0, opacity: 0, scale: 0.5 }}
-                    animate={{
-                      y: [0, 120, 260],
-                      x: [0, particle.drift, particle.drift * 0.45],
-                      opacity: [0, 1, 0],
-                      scale: [0.5, 1, 0.2],
-                    }}
-                    transition={{
-                      delay: particle.delay,
-                      duration: particle.duration,
-                      ease: "easeOut",
-                    }}
-                  />
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
+      <div className="min-h-screen w-full overflow-hidden bg-[#030603] text-[#33ff66] font-mono relative">
 
-          <div className="text-center py-2 select-none">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.45 }}
-            >
-              {capturedImage ? (
-                <CheckCircle2
-                  size={52}
-                  className="mx-auto text-[#33ff66] mb-2 drop-shadow-[0_0_10px_#33ff66]"
-                />
-              ) : (
-                <Camera
-                  size={52}
-                  className="mx-auto text-[#33ff66] mb-2 drop-shadow-[0_0_8px_#33ff66]"
-                />
-              )}
-            </motion.div>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={finalRevealed ? "decoded" : "mission"}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.35 }}
-              >
-                <h1 className="font-mono text-xl md:text-2xl font-bold tracking-widest text-[#33ff66] uppercase">
-                  {finalRevealed ? "BLACKBOX Decoded" : "Final Mission"}
-                </h1>
-                <p className="font-mono text-[10px] md:text-xs text-[#3c663a] mt-1 max-w-xl mx-auto">
-                  {finalRevealed
-                    ? "You didn't just solve puzzles. You decoded BLACKBOX. Welcome to the league of BLACKBOX Masters."
-                    : "You've come this far. Capture one final memory with your entire team."}
+        {/* Background Grid */}
+        <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,rgba(51,255,102,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(51,255,102,0.06)_1px,transparent_1px)] bg-[size:45px_45px]" />
+
+        {/* Glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(51,255,102,0.08),transparent_65%)]" />
+
+        {/* Vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,.9)_100%)]" />
+
+        <div className="relative z-10 flex min-h-screen flex-col px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6">
+
+          {/* HEADER */}
+
+          <header className="mb-5 sm:mb-8 rounded-2xl border border-[#33ff66]/30 bg-[#071007]/90 shadow-[0_0_35px_rgba(51,255,102,.12)] backdrop-blur-md">
+
+            <div className="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 sm:py-4">
+
+              <div>
+
+                <h2 className="text-[#33ff66] font-black tracking-[0.25em] sm:tracking-[0.35em] uppercase text-[11px] sm:text-sm">
+                  BLACKBOX ENGINEERING DIVISION
+                </h2>
+
+                <p className="text-[#4f8b5d] text-[10px] sm:text-xs mt-1 tracking-wider">
+                  VICTORY_CAPTURE.exe
                 </p>
-              </motion.div>
-            </AnimatePresence>
-          </div>
 
-          <div className="relative border-2 border-dashed border-[#33ff66]/30 bg-[#030703] rounded-md min-h-[240px] sm:min-h-[300px] lg:min-h-[340px] overflow-hidden flex items-center justify-center select-none shadow-[0_0_22px_rgba(51,255,102,0.08)]">
-            <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(51,255,102,0.08),transparent_24%,transparent_76%,rgba(51,255,102,0.06))] pointer-events-none z-10" />
-            <div className="absolute inset-x-0 top-1/2 h-px bg-[#33ff66]/30 shadow-[0_0_12px_rgba(51,255,102,0.8)] pointer-events-none z-10" />
-
-            <AnimatePresence mode="wait">
-              {capturedImage ? (
-                <motion.img
-                  key="captured-photo"
-                  src={capturedImage}
-                  alt="Captured team finale"
-                  className="absolute inset-0 h-full w-full object-cover"
-                  initial={{ opacity: 0, scale: 1.04 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.55, ease: "easeOut" }}
-                />
-              ) : (
-                <motion.div
-                  key="live-preview"
-                  className="absolute inset-0"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.35 }}
-                >
-                  <video
-                    ref={videoRef}
-                    muted
-                    playsInline
-                    className={`h-full w-full object-cover transition-opacity duration-500 ${
-                      cameraReady ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {!capturedImage && (!cameraReady || cameraError) && (
-              <div className="relative z-20 flex flex-col items-center justify-center text-center p-6">
-                <CameraIcon
-                  size={48}
-                  className="text-[#3c663a] mb-2 animate-pulse"
-                />
-                <p className="font-mono text-xs text-[#3c663a] font-bold">
-                  CAMERA PREVIEW ARRAY
-                </p>
-                <p className="font-mono text-[10px] text-[#3c663a]/65 mt-1">
-                  {cameraError ? "Camera permission required for final capture." : "Initializing webcam feed..."}
-                </p>
               </div>
-            )}
 
-            {capturedImage && (
-              <motion.div
-                className="absolute left-3 top-3 z-20 flex items-center gap-1.5 border border-[#33ff66]/50 bg-[#030703]/80 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-[#33ff66] backdrop-blur-sm"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25 }}
-              >
-                <Sparkles size={12} />
-                Mission Complete
-              </motion.div>
-            )}
-          </div>
+              <div className="rounded-lg border border-[#33ff66]/30 px-3 sm:px-4 py-2 bg-[#081108] text-[10px] sm:text-xs uppercase tracking-widest">
 
-          <canvas ref={canvasRef} className="hidden" />
+                SYSTEM ONLINE
 
-          <AnimatePresence mode="wait">
-            {finalRevealed ? (
-              <motion.div
-                key="final-message"
-                className="bg-[#040e04] border border-[#1a2d1d] rounded-md p-4 font-mono text-[10px] text-[#3c663a] leading-relaxed space-y-1"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35, duration: 0.35 }}
-              >
-                <p className="text-[#33ff66] font-bold uppercase tracking-wider mb-1">{"// BLACKBOX MASTER RECORD"}</p>
-                <p>Your final frame has been sealed into the recovery archive.</p>
-                <p>The system recognizes your team as BLACKBOX Masters.</p>
-                <p className="text-white font-bold pt-1">Mission complete. Stand tall.</p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="instructions"
-                className="bg-[#040e04] border border-[#1a2d1d] rounded-md p-4 font-mono text-[10px] text-[#3c663a] leading-relaxed space-y-1"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-              >
-            <p className="text-[#33ff66] font-bold uppercase tracking-wider mb-1">{"// CAPTURE YOUR VICTORY"}</p>
-            <p>Gather your entire team inside the frame.</p>
-            <p>Your victory capture snapshot will be saved to your engineer certification credentials.</p>
-            <p className="text-white font-bold pt-1">Smile... this moment is permanent.</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
 
-          {!capturedImage && (
-          <div className="flex gap-3 select-none">
-            <button
-              onClick={handleCapture}
-              disabled={!cameraReady || cameraError}
-              className="flex-1 border border-[#33ff66] text-[#33ff66] bg-transparent hover:bg-[#33ff66] hover:text-black transition-all duration-250 py-2.5 font-mono text-xs font-bold uppercase cursor-pointer"
+            </div>
+
+          </header>
+
+          <main className="flex-1">
+
+            {/* TITLE */}
+
+            <motion.div
+
+              initial={{ opacity: 0, y: -20 }}
+
+              animate={{ opacity: 1, y: 0 }}
+
+              className="text-center mb-6 sm:mb-8 md:mb-10"
+
             >
-              Capture Team Photo
-            </button>
-          </div>
-          )}
+
+              <motion.div
+
+                animate={{
+                  scale: [1, 1.08, 1],
+                  rotate: [0, 3, -3, 0],
+                }}
+
+                transition={{
+                  repeat: Infinity,
+                  duration: 3,
+                }}
+
+              >
+
+                {capturedImage ? (
+
+                  <Trophy
+
+                    size={56}
+
+                    className="mx-auto text-[#33ff66] drop-shadow-[0_0_20px_#33ff66]"
+
+                  />
+
+                ) : (
+
+                  <Camera
+
+                    size={56}
+
+                    className="mx-auto text-[#33ff66] drop-shadow-[0_0_20px_#33ff66]"
+
+                  />
+
+                )}
+
+              </motion.div>
+
+              <h1 className="mt-4 sm:mt-6 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black uppercase tracking-[0.18em] sm:tracking-[0.25em] text-[#33ff66]">
+
+                {finalRevealed
+                  ? "CONGRATULATIONS"
+                  : "FINAL MISSION"}
+
+              </h1>
+
+              <h2 className="mt-2 sm:mt-3 text-lg sm:text-xl md:text-2xl font-bold uppercase text-white tracking-[0.25em] sm:tracking-[0.35em]">
+
+                BLACKBOX ENGINEERS
+
+              </h2>
+
+              <p className="mt-4 sm:mt-5 text-[#4b7f55] max-w-3xl mx-auto text-xs sm:text-sm md:text-base">
+
+                {finalRevealed
+                  ? "Mission Complete • Official Engineer Certification Photo Archived Successfully"
+                  : "Gather your entire engineering squad inside the frame and capture the final BLACKBOX memory."}
+
+              </p>
+
+            </motion.div>
+
+
+            <div className="mx-auto w-full max-w-6xl flex flex-col items-center gap-5 sm:gap-6 md:gap-8">
+
+              {/* Congratulations Banner */}
+
+              <motion.div
+                initial={{ opacity: 0, y: -15 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full max-w-5xl rounded-2xl border-2 border-[#33ff66]
+               bg-[#071007]
+               px-4 sm:px-6 py-4 sm:py-5
+               text-center
+               shadow-[0_0_45px_rgba(51,255,102,.22)]"
+              >
+
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-[.2em] sm:tracking-[.25em] text-[#33ff66]">
+                  🎉 Congratulations BlackBox Engineers 🎉
+                </h2>
+
+                <p className="mt-2 sm:mt-3 text-[#65b374] tracking-[0.25em] sm:tracking-[0.35em] uppercase text-[10px] sm:text-xs md:text-sm">
+                  Official Team Certification Photograph
+                </p>
+
+              </motion.div>
+
+
+
+
+
+              {/* CAMERA FRAME */}
+
+              <div className="relative w-full max-w-[42rem] sm:max-w-5xl">
+
+                {/* Outer Glow */}
+
+                <div className="absolute -inset-3 rounded-[36px]
+                      bg-[#33ff66]/10 blur-3xl"/>
+
+                <div
+                  className="relative
+      rounded-[34px]
+      border-2
+      border-[#33ff66]
+      bg-[#020402]
+      p-3 sm:p-4 md:p-5
+      shadow-[0_0_60px_rgba(51,255,102,.18)]">
+
+
+
+
+                  {/* INNER BORDER */}
+
+                  <div className="rounded-[28px]
+                      border
+                      border-[#33ff66]/30
+                      p-2 sm:p-3">
+
+
+
+
+                    {/* CAMERA */}
+
+                    <div
+                      className="relative
+                 aspect-[5/4] sm:aspect-video
+                 overflow-hidden
+                 rounded-[16px] sm:rounded-[20px]
+                 border
+                 border-[#33ff66]/40
+                 bg-black">
+
+
+
+
+
+                      {/* Corner Brackets */}
+
+                      <div className="absolute left-3 top-3 h-8 w-8 border-l-4 border-t-4 border-[#33ff66] z-40 sm:left-4 sm:top-4 sm:h-10 sm:w-10" />
+
+                      <div className="absolute right-3 top-3 h-8 w-8 border-r-4 border-t-4 border-[#33ff66] z-40 sm:right-4 sm:top-4 sm:h-10 sm:w-10" />
+
+                      <div className="absolute left-3 bottom-3 h-8 w-8 border-l-4 border-b-4 border-[#33ff66] z-40 sm:left-4 sm:bottom-4 sm:h-10 sm:w-10" />
+
+                      <div className="absolute right-3 bottom-3 h-8 w-8 border-r-4 border-b-4 border-[#33ff66] z-40 sm:right-4 sm:bottom-4 sm:h-10 sm:w-10" />
+
+
+
+
+
+                      {/* Scanner */}
+
+                      {!capturedImage && (
+
+                        <motion.div
+
+                          className="absolute
+                 left-0
+                 right-0
+                 h-1
+                 bg-[#33ff66]
+                 shadow-[0_0_18px_#33ff66]
+                 z-30"
+
+                          animate={{
+                            y: ["0%", "100%", "0%"]
+                          }}
+
+                          transition={{
+                            repeat: Infinity,
+                            duration: 3,
+                            ease: "linear"
+                          }}
+
+                        />
+
+                      )}
+
+
+
+
+
+                      {/* Scan Glow */}
+
+                      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(51,255,102,.10),transparent_20%,transparent_80%,rgba(51,255,102,.10))] z-20 pointer-events-none" />
+
+
+
+
+
+                      {/* LIVE VIDEO / PHOTO */}
+
+                      <AnimatePresence mode="wait">
+
+                        {capturedImage ? (
+
+                          <motion.img
+
+                            key="captured"
+
+                            src={capturedImage}
+
+                            alt="Captured Team"
+
+                            className="absolute inset-0 h-full w-full object-cover"
+
+                            initial={{ opacity: 0, scale: 1.08 }}
+
+                            animate={{ opacity: 1, scale: 1 }}
+
+                            transition={{ duration: .5 }}
+
+                          />
+
+                        ) : (
+
+                          <motion.div
+
+                            key="live"
+
+                            className="absolute inset-0"
+
+                            initial={{ opacity: 0 }}
+
+                            animate={{ opacity: 1 }}
+
+                            exit={{ opacity: 0 }}
+
+                          >
+
+                            <video
+
+                              ref={videoRef}
+
+                              autoPlay
+
+                              muted
+
+                              playsInline
+
+                              className="absolute inset-0 h-full w-full object-cover"
+
+                            />
+
+                          </motion.div>
+
+                        )}
+
+                      </AnimatePresence>
+
+                      {/* Camera Loading Overlay */}
+
+                      {!capturedImage && (!cameraReady || cameraError) && (
+                        <div className="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 2,
+                              ease: "linear",
+                            }}
+                          >
+                            <CameraIcon
+                              size={48}
+                              className="text-[#33ff66] drop-shadow-[0_0_20px_#33ff66]"
+                            />
+                          </motion.div>
+
+                          <h3 className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl font-black uppercase tracking-[.2em] sm:tracking-[.25em] text-[#33ff66]">
+                            Camera Array
+                          </h3>
+
+                          <p className="mt-2 text-center text-[#70b97b] text-xs sm:text-sm max-w-md px-4 sm:px-6">
+                            {cameraError
+                              ? "Camera permission is required to generate your official engineer certification."
+                              : "Initializing live capture system..."}
+                          </p>
+
+                        </div>
+                      )}
+
+
+
+
+
+
+                      {/* Mission Complete Badge */}
+
+                      {capturedImage && (
+
+                        <motion.div
+
+                          initial={{ opacity: 0, y: -20 }}
+
+                          animate={{ opacity: 1, y: 0 }}
+
+                          className="
+          absolute
+          left-6
+          top-6
+          z-50
+          rounded-xl
+          border
+          border-[#33ff66]
+          bg-[#041004]/90
+          px-4 sm:px-5
+          py-2 sm:py-3
+          backdrop-blur-md
+          shadow-[0_0_30px_rgba(51,255,102,.25)]
+          "
+
+                        >
+
+                          <div className="flex items-center gap-3">
+
+                            <Sparkles
+                              size={18}
+                              className="text-[#33ff66]"
+                            />
+
+                            <div>
+
+                              <p className="text-[10px] sm:text-xs uppercase tracking-[.25em] sm:tracking-[.3em] text-[#33ff66] font-black">
+                                Mission Complete
+                              </p>
+
+                              <p className="text-[9px] sm:text-[10px] uppercase tracking-[.18em] sm:tracking-[.2em] text-[#7ac686]">
+                                Photo Successfully Captured
+                              </p>
+
+                            </div>
+
+                          </div>
+
+                        </motion.div>
+
+                      )}
+
+
+
+
+
+
+                      {/* Bottom Certification Strip */}
+
+                      <div
+                        className="
+      absolute
+      bottom-0
+      left-0
+      right-0
+      z-40
+      bg-gradient-to-r
+      from-[#051005]
+      via-[#0b1d0d]
+      to-[#051005]
+      border-t
+      border-[#33ff66]/40
+      px-3 sm:px-4 md:px-6
+      py-2 sm:py-3
+      ">
+
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+
+                          <span className="text-[#33ff66] font-bold uppercase tracking-[.2em] sm:tracking-[.25em] text-[10px] sm:text-xs">
+                            BLACKBOX ENGINEERS
+                          </span>
+
+                          <span className="text-[#79bb7b] uppercase tracking-[.3em] text-[10px]">
+                            Official Certification Frame
+                          </span>
+
+                          <span className="text-[#79bb7b] uppercase tracking-[.3em] text-[10px]">
+                            Secure Capture Protocol
+                          </span>
+
+                        </div>
+
+                      </div>
+
+
+
+
+
+                      {/* Camera Glow */}
+
+                      <div
+                        className="
+      absolute
+      inset-0
+      pointer-events-none
+      rounded-[24px]
+      shadow-[inset_0_0_60px_rgba(51,255,102,.08)]
+      "
+                      />
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <canvas
+                ref={canvasRef}
+                className="hidden"
+              />
+              <AnimatePresence mode="wait">
+
+                {finalRevealed ? (
+
+                  <motion.div
+
+                    key="success"
+
+                    initial={{ opacity: 0, y: 30 }}
+
+                    animate={{ opacity: 1, y: 0 }}
+
+                    exit={{ opacity: 0 }}
+
+                    transition={{ duration: .5 }}
+
+                    className="w-full max-w-5xl"
+
+                  >
+
+                    <div
+                      className="
+      rounded-2xl
+      border-2
+      border-[#33ff66]
+      bg-[#061106]
+      p-5 sm:p-6 md:p-8
+      shadow-[0_0_60px_rgba(51,255,102,.18)]
+      ">
+
+                      <motion.div
+
+                        animate={{
+                          scale: [1, 1.05, 1]
+                        }}
+
+                        transition={{
+                          repeat: Infinity,
+                          duration: 2
+                        }}
+
+                      >
+
+                        <Trophy
+
+                          size={72}
+
+                          className="
+          mx-auto
+          text-[#33ff66]
+          drop-shadow-[0_0_25px_#33ff66]
+          "
+
+                        />
+
+                      </motion.div>
+
+                      <h2
+                        className="
+        mt-6
+        text-center
+        text-2xl
+        sm:text-3xl
+        md:text-4xl
+        lg:text-5xl
+        font-black
+        uppercase
+        tracking-[.25em]
+        text-[#33ff66]
+        ">
+
+                        Congratulations
+
+                      </h2>
+
+                      <h3
+                        className="
+        mt-4
+        text-center
+        text-lg
+        sm:text-xl
+        md:text-2xl
+        lg:text-3xl
+        uppercase
+        tracking-[.3em]
+        font-bold
+        text-white
+        ">
+
+                        BLACKBOX ENGINEERS
+
+                      </h3>
+
+                      <p
+                        className="
+        mt-6
+        text-center
+        text-[#73bc7a]
+        max-w-3xl
+        mx-auto
+        leading-8
+        ">
+
+                        Your final team photograph has been successfully archived into
+                        the BLACKBOX Engineer Registry.
+
+                        <br /><br />
+
+                        You have completed every mission and officially joined the
+                        BLACKBOX League of Engineers.
+
+                      </p>
+
+                      <div
+                        className="
+        mt-10
+        grid
+        gap-4
+        md:grid-cols-3
+        ">
+
+                        <div className="rounded-xl border border-[#33ff66]/30 bg-[#071207] p-5">
+
+                          <CheckCircle2 className="mb-3 text-[#33ff66]" />
+
+                          <h4 className="font-bold uppercase tracking-[.2em]">
+                            Team Photo
+                          </h4>
+
+                          <p className="mt-2 text-[#72b977] text-sm">
+                            Successfully Captured
+                          </p>
+
+                        </div>
+
+                        <div className="rounded-xl border border-[#33ff66]/30 bg-[#071207] p-5">
+
+                          <CheckCircle2 className="mb-3 text-[#33ff66]" />
+
+                          <h4 className="font-bold uppercase tracking-[.2em]">
+                            Certification
+                          </h4>
+
+                          <p className="mt-2 text-[#72b977] text-sm">
+                            Engineer Status Verified
+                          </p>
+
+                        </div>
+
+                        <div className="rounded-xl border border-[#33ff66]/30 bg-[#071207] p-5">
+
+                          <CheckCircle2 className="mb-3 text-[#33ff66]" />
+
+                          <h4 className="font-bold uppercase tracking-[.2em]">
+                            Mission
+                          </h4>
+
+                          <p className="mt-2 text-[#72b977] text-sm">
+                            Successfully Completed
+                          </p>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                  </motion.div>
+
+                ) : (
+
+                  <motion.div
+
+                    key="instructions"
+
+                    initial={{ opacity: 0, y: 20 }}
+
+                    animate={{ opacity: 1, y: 0 }}
+
+                    exit={{ opacity: 0 }}
+
+                    className="w-full max-w-5xl"
+
+                  >
+
+                    <div
+                      className="
+      rounded-2xl
+      border
+      border-[#33ff66]/30
+      bg-[#071107]
+      p-5 sm:p-6 md:p-8
+      ">
+
+                      <h3
+                        className="
+        text-[#33ff66]
+        uppercase
+        tracking-[.25em]
+        font-black
+        text-base
+        sm:text-lg
+        ">
+
+                        Capture Your Victory
+
+                      </h3>
+
+                      <p
+                        className="
+        mt-5
+        text-[#74b97d]
+        leading-8
+        ">
+
+                        • Gather your complete engineering team inside the camera frame.
+
+                        <br /><br />
+
+                        • Stand together for your official BLACKBOX certification photo.
+
+                        <br /><br />
+
+                        • Once captured, this becomes your team's final achievement record.
+
+                      </p>
+
+                    </div>
+
+                  </motion.div>
+
+                )}
+
+              </AnimatePresence>
+              {/* Capture Button */}
+
+              {!capturedImage && (
+
+                <motion.div
+                  initial={{ opacity: 0, y: 25 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="w-full max-w-5xl"
+                >
+
+                  <motion.button
+                    whileHover={{
+                      scale: 1.02,
+                      boxShadow: "0 0 45px rgba(51,255,102,.45)",
+                    }}
+                    whileTap={{
+                      scale: 0.98,
+                    }}
+                    onClick={handleCapture}
+                    disabled={!cameraReady || cameraError}
+                    className="
+      group
+      relative
+      w-full
+      overflow-hidden
+      rounded-2xl
+      border-2
+      border-[#33ff66]
+      bg-[#081208]
+      py-4 sm:py-5
+      text-base sm:text-lg md:text-xl
+      font-black
+      uppercase
+      tracking-[.35em]
+      text-[#33ff66]
+      transition-all
+      duration-300
+      disabled:cursor-not-allowed
+      disabled:opacity-40
+      "
+
+                  >
+
+                    {/* Animated Background */}
+
+                    <motion.div
+                      className="absolute inset-0 bg-[#33ff66]"
+                      initial={{ x: "-100%" }}
+                      whileHover={{ x: "0%" }}
+                      transition={{ duration: .35 }}
+                    />
+
+                    <span className="relative z-10 transition-colors duration-300 group-hover:text-black">
+
+                      📸 CAPTURE TEAM PHOTO
+
+                    </span>
+
+                  </motion.button>
+
+                </motion.div>
+
+              )}
+
+            </div>
+          </main>
+
         </div>
-      </BlackboxShell>
+      </div>
+
     </PageTransition>
+
   );
 }

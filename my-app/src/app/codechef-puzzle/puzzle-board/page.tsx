@@ -3,6 +3,17 @@
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
+async function markPuzzleComplete() {
+  try {
+    await fetch("/api/codechef-puzzle/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+    console.error("Failed to mark puzzle complete:", error);
+  }
+}
+
 const PuzzleBoard = dynamic(() => import("./PuzzleBoard"), { ssr: false });
 
 function generateFragment() {
@@ -17,9 +28,11 @@ function generateFragment() {
 export default function CodeChefPuzzlePage() {
   const router = useRouter();
 
-  const handleSolved = () => {
+  const handleSolved = async () => {
     const fragment = generateFragment();
     localStorage.setItem("blackbox_fragment_module4", fragment);
+
+    await markPuzzleComplete();
     router.push("/codechef-puzzle/success");
   };
 
