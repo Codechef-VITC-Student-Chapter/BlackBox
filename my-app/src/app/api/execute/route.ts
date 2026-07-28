@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeCode } from "@/lib/judge0";
-
+import { getActiveModuleTeam } from "@/lib/modules/activeModule";
+import { jsonError } from "@/lib/http/responses";
 const LANGUAGE_MAP: Record<string, number> = {
   cpp: 54,
   java: 62,
@@ -10,6 +11,8 @@ const LANGUAGE_MAP: Record<string, number> = {
 
 export async function POST(req: NextRequest) {
   try {
+    const auth = await getActiveModuleTeam(req, 6, "Engineer Certification");
+    if (!auth.ok) return jsonError(auth.message, auth.status);
     const { code, language, stdin, expectedOutput } = await req.json();
 
     if (!code || !language) {
