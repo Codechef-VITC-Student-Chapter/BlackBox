@@ -6,6 +6,7 @@ type PuzzleBoardProps = {
   imageSrc: string;
   gridSize?: number;
   onSolved: () => void;
+  initialTiles?: number[];
 };
 
 function buildSolvedTiles(total: number) {
@@ -42,60 +43,22 @@ function shuffleTiles(size: number): number[] {
   return tiles;
 }
 
-export default function PuzzleBoard({ imageSrc, gridSize = 5, onSolved }: PuzzleBoardProps) {
+export default function PuzzleBoard({ imageSrc, gridSize = 5, onSolved,initialTiles, }: PuzzleBoardProps) {
   const total = gridSize * gridSize;
-  const [tiles, setTiles] = useState<number[]>(() => shuffleTiles(gridSize));
-  const [moves, setMoves] = useState(0);
+const [tiles, setTiles] = useState<number[]>(
+  () => initialTiles ?? shuffleTiles(gridSize)
+);  const [moves, setMoves] = useState(0);
 
-  const [fingerprints, setFingerprints] = useState<string[]>([]);
   const solvedRef = useRef(false);
-
-  useEffect(() => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = imageSrc;
-    img.onload = () => {
-      const sample = 8;
-      const canvas = document.createElement("canvas");
-      canvas.width = gridSize * sample;
-      canvas.height = gridSize * sample;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      const fps: string[] = [];
-      for (let value = 0; value < total; value++) {
-        if (value === total - 1) {
-          fps.push("BLANK");
-          continue;
-        }
-        const r = Math.floor(value / gridSize);
-        const c = value % gridSize;
-        const data = ctx.getImageData(c * sample, r * sample, sample, sample).data;
-        let fp = "";
-        for (let i = 0; i < data.length; i += 4) {
-          fp += (((data[i] >> 4) << 8) | ((data[i + 1] >> 4) << 4) | (data[i + 2] >> 4)).toString(16);
-        }
-        fps.push(fp);
-      }
-      setFingerprints(fps);
-    };
-  }, [imageSrc, gridSize, total]);
 
   const blankIndex = tiles.indexOf(total - 1);
   const tileSize = 100 / gridSize;
 
   const checkSolved = useCallback(
     (arrangement: number[]) => {
-      return arrangement.every((value, index) => {
-        if (value === index) return true;
-        if (fingerprints.length === total) {
-          return fingerprints[value] === fingerprints[index] && fingerprints[index] !== "BLANK";
-        }
-        return false;
-      });
+      return arrangement.every((value, index) => value === index);
     },
-    [fingerprints, total]
+    []
   );
 
   const isSolved = checkSolved(tiles);
