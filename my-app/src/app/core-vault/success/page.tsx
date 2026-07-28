@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PageTransition } from "@/components/ui/PageTransition";
 import BlackboxShell, { StatusCardInfo } from "@/components/ui/BlackboxShell";
@@ -33,7 +33,7 @@ const STATUS_CARDS: StatusCardInfo[] = [
 export default function CoreSuccessPage() {
   const [terminalLines, setTerminalLines] = useState<string[]>([]);
   const [redirecting, setRedirecting] = useState(false);
-
+  const router = useRouter();
   useEffect(() => {
     let i = 0;
     const interval = setInterval(() => {
@@ -48,6 +48,7 @@ export default function CoreSuccessPage() {
       } else {
         clearInterval(interval);
         setRedirecting(true);
+        router.push("/engineer-certification");
       }
     }, 600);
 

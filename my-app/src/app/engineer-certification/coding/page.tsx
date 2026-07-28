@@ -86,6 +86,8 @@ const TABS: { id: CodingTab; label: string }[] = [
   { id: "leaderboard", label: "LEADERBOARD" },
 ];
 
+const BLOCKED_CLIPBOARD_SHORTCUTS = new Set(["a", "c", "v", "x"]);
+
 const getErrorMessage = (err: unknown) => (
   err instanceof Error ? err.message : "Unexpected error"
 );
@@ -110,6 +112,39 @@ export default function CodingPage() {
   const [timeLeft, setTimeLeft] = useState(45 * 60);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+
+  useEffect(() => {
+    const preventEvent = (event: Event) => {
+      event.preventDefault();
+    };
+
+    const preventBlockedShortcut = (event: KeyboardEvent) => {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        BLOCKED_CLIPBOARD_SHORTCUTS.has(event.key.toLowerCase())
+      ) {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener("keydown", preventBlockedShortcut, true);
+    document.addEventListener("copy", preventEvent, true);
+    document.addEventListener("cut", preventEvent, true);
+    document.addEventListener("paste", preventEvent, true);
+    document.addEventListener("contextmenu", preventEvent, true);
+    document.addEventListener("dragover", preventEvent, true);
+    document.addEventListener("drop", preventEvent, true);
+
+    return () => {
+      document.removeEventListener("keydown", preventBlockedShortcut, true);
+      document.removeEventListener("copy", preventEvent, true);
+      document.removeEventListener("cut", preventEvent, true);
+      document.removeEventListener("paste", preventEvent, true);
+      document.removeEventListener("contextmenu", preventEvent, true);
+      document.removeEventListener("dragover", preventEvent, true);
+      document.removeEventListener("drop", preventEvent, true);
+    };
+  }, []);
 
   // Fetch first published problem
   useEffect(() => {

@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { adminAuthorizationError, getAdminAuthorizationFromRequest } from "@/lib/auth/admin";
 import { connectToDatabase } from "@/lib/db/mongodb";
 import { Problem } from "@/models/Problem";
 import { TestCase } from "@/models/TestCase";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const auth = await getAdminAuthorizationFromRequest(req);
+    if (!auth.ok) return adminAuthorizationError(auth);
+
     await connectToDatabase();
     const { id } = await params;
     const problem = await Problem.findById(id).lean();
@@ -20,6 +24,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const auth = await getAdminAuthorizationFromRequest(req);
+    if (!auth.ok) return adminAuthorizationError(auth);
+
     await connectToDatabase();
     const { id } = await params;
     const body = await req.json();
@@ -47,6 +54,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const auth = await getAdminAuthorizationFromRequest(req);
+    if (!auth.ok) return adminAuthorizationError(auth);
+
     await connectToDatabase();
     const { id } = await params;
     await Problem.findByIdAndDelete(id);

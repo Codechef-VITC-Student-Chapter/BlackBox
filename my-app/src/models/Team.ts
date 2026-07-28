@@ -48,6 +48,11 @@ const teamSchema = new Schema(
       min: 0,
       default: 0,
     },
+    role: {
+      type: String,
+      enum: ["team", "admin"],
+      default: "team",
+    },
     module2Data: {
       recoveryKey: {
         type: String,

@@ -57,5 +57,11 @@ export async function requireModuleRouteAccess(
     return team;
   }
 
-  redirect(MODULE_ROUTES[team.currentModule] ?? "/authentication");
+  const targetRoute = MODULE_ROUTES[team.currentModule] ?? "/authentication";
+
+  if (pathname === targetRoute) {
+    return team;
+  }
+
+  redirect(targetRoute);
 }
