@@ -6,7 +6,9 @@
     "dev": "next dev  --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "import:teams": "node scripts/import-teams.mjs",
+    "delete:teams": "node scripts/delete-teams.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
