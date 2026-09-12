@@ -7,7 +7,6 @@ my-app/node_modules/
 .env*.local
 
 # Editor directories
-.vscode/
 .idea/
 *.suo
 *.ntvs*
