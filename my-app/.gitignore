@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# security remediation: prevent re-tracking of credential/PII files
+cookies.txt
+generated_team_credentials.csv
