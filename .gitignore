@@ -1,0 +1,16 @@
+# Dependency directories
+node_modules/
+module2/node_modules/
+my-app/node_modules/
+
+# Local env files
+.env*.local
+
+# Editor directories
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
